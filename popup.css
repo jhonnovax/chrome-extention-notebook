@@ -295,7 +295,7 @@ body {
   gap: 2px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .toolbar-btn {
@@ -374,6 +374,71 @@ body {
 .toolbar-btn[data-command="italic"]        { font-style: italic; }
 .toolbar-btn[data-command="underline"]     { text-decoration: underline; }
 .toolbar-btn[data-command="strikeThrough"] { text-decoration: line-through; }
+
+.toolbar-dropdown {
+  position: relative;
+}
+
+.toolbar-btn--highlight-trigger[aria-expanded="true"] {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.toolbar-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 140px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  z-index: 20;
+}
+
+.toolbar-dropdown-menu.is-open {
+  display: flex;
+}
+
+.toolbar-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.toolbar-dropdown-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.toolbar-dropdown-item__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+.toolbar-dropdown-item__label {
+  line-height: 1;
+  white-space: nowrap;
+}
 
 /* ============================================================
    Editor

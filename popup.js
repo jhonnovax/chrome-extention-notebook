@@ -401,6 +401,10 @@
      ============================================================ */
   const TOOLBAR = {
     el: null,
+    _highlightMenuEl: null,
+    _highlightTriggerEl: null,
+    _highlightMenuOpen: false,
+    _didBindGlobalClose: false,
 
     COMMANDS: [
       { id: 'bold',             label: 'B',  title: 'Bold (Ctrl+B)',    type: 'state' },
@@ -437,6 +441,19 @@
       { id: '__sep3__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
       { id: '__sep4__',         label: '',   title: '',                 type: 'sep'   },
+      {
+        id: 'highlightMenu',
+        label: '',
+        title: 'Highlight options',
+        type: 'highlight-menu',
+        options: [
+          { id: 'hlClear',  title: 'Clear highlight', type: 'highlight-clear' },
+          { id: 'hlYellow', title: 'Highlight yellow', type: 'highlight', color: '#fef08a' },
+          { id: 'hlGreen',  title: 'Highlight green',  type: 'highlight', color: '#dcfce7' },
+          { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', color: '#fee2e2' },
+        ],
+      },
+      { id: '__sep5__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'clearContent',     label: '',   title: 'Clear all content', type: 'action',
         btnClass: 'toolbar-btn--danger',
         icon:
@@ -464,6 +481,67 @@
           sep.className = 'toolbar-sep';
           sep.setAttribute('role', 'separator');
           el.appendChild(sep);
+          return;
+        }
+
+        if (cmd.type === 'highlight-menu') {
+          const wrap = document.createElement('div');
+          wrap.className = 'toolbar-dropdown';
+          wrap.dataset.cmdId = cmd.id;
+
+          const trigger = document.createElement('button');
+          trigger.className = 'toolbar-btn toolbar-btn--highlight-trigger';
+          trigger.title = cmd.title;
+          trigger.setAttribute('aria-label', cmd.title);
+          trigger.setAttribute('aria-haspopup', 'menu');
+          trigger.setAttribute('aria-expanded', 'false');
+          trigger.innerHTML =
+            '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">' +
+            '<path d="M11.7 2.2l4.1 4.1-6.6 6.6-4.8.7.7-4.8 6.6-6.6z" fill="currentColor" opacity="0.9"/>' +
+            '<path d="M10.8 3.1l4.1 4.1" stroke="var(--color-surface)" stroke-width="1.2" stroke-linecap="round"/>' +
+            '<path d="M3.5 15h11" stroke="#fef08a" stroke-width="2.4" stroke-linecap="round"/>' +
+            '</svg>';
+          trigger.addEventListener('mousedown', (e) => e.preventDefault());
+          trigger.addEventListener('click', () => {
+            TOOLBAR.toggleHighlightMenu();
+          });
+
+          const menu = document.createElement('div');
+          menu.className = 'toolbar-dropdown-menu';
+          menu.setAttribute('role', 'menu');
+          menu.setAttribute('aria-label', 'Highlight options');
+
+          cmd.options.forEach((opt) => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'toolbar-dropdown-item';
+            item.setAttribute('role', 'menuitem');
+            item.title = opt.title;
+            item.dataset.cmdId = opt.id;
+
+            if (opt.type === 'highlight-clear') {
+              item.innerHTML =
+                '<span class="toolbar-dropdown-item__label">Clear highlight</span>';
+            } else {
+              item.innerHTML =
+                '<span class="toolbar-dropdown-item__swatch" style="background:' + opt.color + ';"></span>' +
+                '<span class="toolbar-dropdown-item__label">' + opt.title.replace('Highlight ', '') + '</span>';
+            }
+
+            item.addEventListener('mousedown', (e) => e.preventDefault());
+            item.addEventListener('click', () => {
+              TOOLBAR.onButtonClick(opt);
+              TOOLBAR.closeHighlightMenu();
+            });
+            menu.appendChild(item);
+          });
+
+          wrap.appendChild(trigger);
+          wrap.appendChild(menu);
+          el.appendChild(wrap);
+
+          TOOLBAR._highlightMenuEl = menu;
+          TOOLBAR._highlightTriggerEl = trigger;
           return;
         }
 
@@ -497,6 +575,17 @@
 
         el.appendChild(btn);
       });
+
+      if (!TOOLBAR._didBindGlobalClose) {
+        TOOLBAR._didBindGlobalClose = true;
+        document.addEventListener('mousedown', (e) => {
+          if (!TOOLBAR._highlightMenuOpen) return;
+          if (!TOOLBAR._highlightMenuEl || !TOOLBAR._highlightTriggerEl) return;
+          if (TOOLBAR._highlightMenuEl.contains(e.target)) return;
+          if (TOOLBAR._highlightTriggerEl.contains(e.target)) return;
+          TOOLBAR.closeHighlightMenu();
+        });
+      }
     },
 
     onButtonClick(cmd) {
@@ -514,6 +603,10 @@
         } else {
           document.execCommand('formatBlock', false, target);
         }
+      } else if (cmd.type === 'highlight') {
+        document.execCommand('hiliteColor', false, cmd.color);
+      } else if (cmd.type === 'highlight-clear') {
+        document.execCommand('hiliteColor', false, 'transparent');
       } else if (cmd.type === 'action') {
         if (cmd.action) cmd.action();
         return; // scheduleSave handled inside action if needed
@@ -536,7 +629,7 @@
       if (!TOOLBAR.el) return;
 
       TOOLBAR.COMMANDS.forEach((cmd) => {
-        if (cmd.type === 'sep') return;
+        if (cmd.type === 'sep' || cmd.type === 'highlight' || cmd.type === 'highlight-menu') return;
         const btn = TOOLBAR.el.querySelector(`[data-cmd-id="${cmd.id}"]`);
         if (!btn) return;
 
@@ -563,6 +656,24 @@
       const btn = TOOLBAR.el.querySelector('[data-cmd-id="clearContent"]');
       if (!btn) return;
       btn.disabled = EDITOR.getHTML() === '';
+    },
+
+    toggleHighlightMenu() {
+      if (!TOOLBAR._highlightMenuEl || !TOOLBAR._highlightTriggerEl) return;
+      if (TOOLBAR._highlightMenuOpen) {
+        TOOLBAR.closeHighlightMenu();
+        return;
+      }
+      TOOLBAR._highlightMenuOpen = true;
+      TOOLBAR._highlightMenuEl.classList.add('is-open');
+      TOOLBAR._highlightTriggerEl.setAttribute('aria-expanded', 'true');
+    },
+
+    closeHighlightMenu() {
+      if (!TOOLBAR._highlightMenuEl || !TOOLBAR._highlightTriggerEl) return;
+      TOOLBAR._highlightMenuOpen = false;
+      TOOLBAR._highlightMenuEl.classList.remove('is-open');
+      TOOLBAR._highlightTriggerEl.setAttribute('aria-expanded', 'false');
     },
   };
 
