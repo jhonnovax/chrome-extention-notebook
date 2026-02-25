@@ -615,12 +615,22 @@
           '<circle cx="1.5" cy="10.5" r="1.5" fill="currentColor"/>' +
           '<path d="M5.5 2.5h9M5.5 6.5h9M5.5 10.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
           '</svg>' },
+      { id: 'outdent', label: '', title: 'Outdent', type: 'state',
+        icon:
+          '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
+          '<path d="M6 2.5h8M6 5h8M6 7.5h8M6 10h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
+          '<path d="M1.8 6.5L4.6 4.8V8.2L1.8 6.5Z" fill="currentColor"/>' +
+          '</svg>' },
+      { id: 'indent', label: '', title: 'Indent', type: 'state',
+        icon:
+          '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
+          '<path d="M1 2.5h8M1 5h8M1 7.5h8M1 10h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
+          '<path d="M13.2 6.5L10.4 4.8V8.2L13.2 6.5Z" fill="currentColor"/>' +
+          '</svg>' },
       { id: 'insertHorizontalRule', label: '', title: 'Horizontal rule', type: 'state',
         icon:
           '<svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">' +
-          '<path d="M0 2h15" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>' +
-          '<path d="M0 5.5h15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
-          '<path d="M0 9h15" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>' +
+          '<path d="M1 5.5H14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
           '</svg>' },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
       {
