@@ -305,7 +305,7 @@ body {
   background: transparent;
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -358,8 +358,14 @@ body {
   border-color: var(--color-danger);
 }
 
+/* Scale up SVG icons in toolbar buttons */
+.toolbar-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* Bold/Italic/Underline label styling */
-.toolbar-btn[data-command="bold"]          { font-weight: 700; font-size: 13px; }
+.toolbar-btn[data-command="bold"]          { font-weight: 700; }
 .toolbar-btn[data-command="italic"]        { font-style: italic; }
 .toolbar-btn[data-command="underline"]     { text-decoration: underline; }
 .toolbar-btn[data-command="strikeThrough"] { text-decoration: line-through; }
