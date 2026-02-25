@@ -652,8 +652,8 @@ body {
 }
 
 .list-drag-handle svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 body.is-list-dragging {
