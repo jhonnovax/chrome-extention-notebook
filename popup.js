@@ -902,6 +902,10 @@
      ============================================================ */
   const TABS = {
     listEl: null,
+    _dragTabId: null,
+    _dropTabId: null,
+    _dropPos: null,
+    _didDrag: false,
 
     render(listEl) {
       TABS.listEl = listEl;
@@ -921,6 +925,7 @@
         item.setAttribute('aria-selected', tab.id === STATE.activeTabId ? 'true' : 'false');
         item.setAttribute('tabindex', '0');
         item.dataset.tabId = tab.id;
+        item.draggable = true;
 
         // Label
         const label = document.createElement('span');
@@ -948,6 +953,10 @@
 
         // Click on tab → switch
         item.addEventListener('click', (e) => {
+          if (TABS._didDrag) {
+            TABS._didDrag = false;
+            return;
+          }
           if (e.target === delBtn || delBtn.contains(e.target)) return;
           TABS.switchTo(tab.id);
         });
@@ -977,6 +986,88 @@
           e.stopPropagation();
           TABS.deleteTab(tab.id);
         });
+
+        // Drag-and-drop reorder
+        item.addEventListener('dragstart', (e) => TABS.onDragStart(e, tab.id, delBtn));
+        item.addEventListener('dragover', (e) => TABS.onDragOver(e, tab.id));
+        item.addEventListener('drop', (e) => TABS.onDrop(e, tab.id));
+        item.addEventListener('dragend', () => TABS.clearDragState());
+      });
+    },
+
+    onDragStart(e, tabId, delBtn) {
+      if (!e.dataTransfer) return;
+      if (e.target === delBtn || delBtn.contains(e.target)) {
+        e.preventDefault();
+        return;
+      }
+      TABS._dragTabId = tabId;
+      TABS._dropTabId = null;
+      TABS._dropPos = null;
+      TABS._didDrag = false;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', tabId);
+      if (e.currentTarget && e.currentTarget.classList) {
+        e.currentTarget.classList.add('is-dragging');
+      }
+    },
+
+    onDragOver(e, tabId) {
+      if (!TABS._dragTabId || TABS._dragTabId === tabId) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+
+      const rect = e.currentTarget.getBoundingClientRect();
+      const midpoint = rect.left + rect.width / 2;
+      const pos = e.clientX < midpoint ? 'before' : 'after';
+
+      if (TABS._dropTabId !== tabId || TABS._dropPos !== pos) {
+        TABS._dropTabId = tabId;
+        TABS._dropPos = pos;
+        TABS.applyDropClasses();
+      }
+    },
+
+    onDrop(e, tabId) {
+      if (!TABS._dragTabId || TABS._dragTabId === tabId) return;
+      e.preventDefault();
+
+      const fromIdx = STATE.tabs.findIndex((t) => t.id === TABS._dragTabId);
+      const targetIdx = STATE.tabs.findIndex((t) => t.id === tabId);
+      if (fromIdx === -1 || targetIdx === -1) {
+        TABS.clearDragState();
+        return;
+      }
+
+      let toIdx = targetIdx + (TABS._dropPos === 'after' ? 1 : 0);
+      const [moved] = STATE.tabs.splice(fromIdx, 1);
+      if (fromIdx < toIdx) toIdx -= 1;
+      STATE.tabs.splice(toIdx, 0, moved);
+
+      TABS._didDrag = true;
+      TABS.redraw();
+      STORAGE.scheduleSave();
+    },
+
+    applyDropClasses() {
+      if (!TABS.listEl) return;
+      const items = TABS.listEl.querySelectorAll('.tab-item');
+      items.forEach((el) => {
+        el.classList.remove('tab-item--drop-before', 'tab-item--drop-after');
+        if (!TABS._dropTabId || el.dataset.tabId !== TABS._dropTabId) return;
+        if (TABS._dropPos === 'before') el.classList.add('tab-item--drop-before');
+        if (TABS._dropPos === 'after') el.classList.add('tab-item--drop-after');
+      });
+    },
+
+    clearDragState() {
+      TABS._dragTabId = null;
+      TABS._dropTabId = null;
+      TABS._dropPos = null;
+      if (!TABS.listEl) return;
+      const items = TABS.listEl.querySelectorAll('.tab-item');
+      items.forEach((el) => {
+        el.classList.remove('is-dragging', 'tab-item--drop-before', 'tab-item--drop-after');
       });
     },
 

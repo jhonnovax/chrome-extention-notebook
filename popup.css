@@ -185,6 +185,30 @@ body {
   border-radius: 2px 2px 0 0;
 }
 
+.tab-item.is-dragging {
+  opacity: 0.55;
+}
+
+.tab-item.tab-item--drop-before::before,
+.tab-item.tab-item--drop-after::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.tab-item.tab-item--drop-before::before {
+  left: -1px;
+}
+
+.tab-item.tab-item--drop-after::before {
+  right: -1px;
+}
+
 /* Tab label */
 .tab-label {
   flex: 1;
