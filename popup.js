@@ -415,6 +415,9 @@
       const idx = STATE.tabs.findIndex((t) => t.id === tabId);
       if (idx === -1) return;
 
+      const tab = STATE.tabs[idx];
+      if (!confirm(`Delete "${tab.name}"?`)) return;
+
       STATE.tabs.splice(idx, 1);
 
       // Switch to nearest neighbor
