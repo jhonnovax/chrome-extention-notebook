@@ -492,12 +492,7 @@
           trigger.setAttribute('aria-label', cmd.title);
           trigger.setAttribute('aria-haspopup', 'menu');
           trigger.setAttribute('aria-expanded', 'false');
-          trigger.innerHTML =
-            '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">' +
-            '<path d="M11.7 2.2l4.1 4.1-6.6 6.6-4.8.7.7-4.8 6.6-6.6z" fill="currentColor" opacity="0.9"/>' +
-            '<path d="M10.8 3.1l4.1 4.1" stroke="var(--color-surface)" stroke-width="1.2" stroke-linecap="round"/>' +
-            '<path d="M3.5 15h11" stroke="#fef08a" stroke-width="2.4" stroke-linecap="round"/>' +
-            '</svg>';
+          trigger.innerHTML = '<span class="toolbar-highlight-glyph" aria-hidden="true">A</span>';
           trigger.addEventListener('mousedown', (e) => e.preventDefault());
           trigger.addEventListener('click', () => {
             TOOLBAR.toggleHighlightMenu();

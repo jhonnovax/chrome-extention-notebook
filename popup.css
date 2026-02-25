@@ -385,6 +385,20 @@ body {
   border-color: var(--color-accent);
 }
 
+.toolbar-highlight-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: #fef08a;
+  color: #5b4a00;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .toolbar-dropdown-menu {
   position: absolute;
   top: calc(100% + 6px);
