@@ -458,19 +458,52 @@
       if (!LIST_REORDER._isDragging || !LIST_REORDER._dragLi || !LIST_REORDER._dragList) return;
 
       const target = document.elementFromPoint(e.clientX, e.clientY);
-      const overLi = LIST_REORDER._getSortableLi(target);
-      if (overLi && overLi !== LIST_REORDER._dragLi && overLi.parentElement === LIST_REORDER._dragList) {
-        const rect = overLi.getBoundingClientRect();
-        const before = e.clientY < rect.top + rect.height / 2;
-        const ref = before ? overLi : overLi.nextSibling;
-        if (ref !== LIST_REORDER._dragLi) {
-          LIST_REORDER._dragList.insertBefore(LIST_REORDER._dragLi, ref);
-          LIST_REORDER._didMove = true;
+      const targetList = LIST_REORDER._getClosestList(target);
+      if (
+        target &&
+        LIST_REORDER._editorEl &&
+        LIST_REORDER._editorEl.contains(target) &&
+        targetList &&
+        // Prevent invalid DOM cycles (cannot move a node into its own descendant list).
+        !LIST_REORDER._dragLi.contains(targetList)
+      ) {
+        const ref = LIST_REORDER._getInsertRefForY(
+          targetList,
+          e.clientY,
+          LIST_REORDER._dragLi
+        );
+        // No-op if insertion point is unchanged.
+        if (ref !== LIST_REORDER._dragLi && ref !== LIST_REORDER._dragLi.nextSibling) {
+          const prevParent = LIST_REORDER._dragLi.parentElement;
+          const prevNext = LIST_REORDER._dragLi.nextSibling;
+          targetList.insertBefore(LIST_REORDER._dragLi, ref);
+          LIST_REORDER._dragList = LIST_REORDER._dragLi.parentElement;
+          if (LIST_REORDER._dragLi.parentElement !== prevParent || LIST_REORDER._dragLi.nextSibling !== prevNext) {
+            LIST_REORDER._didMove = true;
+          }
         }
       }
 
       LIST_REORDER._hoverLi = LIST_REORDER._dragLi;
       LIST_REORDER._repositionHandle();
+    },
+
+    _getClosestList(target) {
+      if (!target || !target.closest) return null;
+      const list = target.closest('ul,ol');
+      if (!list) return null;
+      const tag = list.tagName;
+      return (tag === 'UL' || tag === 'OL') ? list : null;
+    },
+
+    _getInsertRefForY(listEl, clientY, skipLi) {
+      if (!listEl) return null;
+      const items = Array.from(listEl.children).filter((el) => el.tagName === 'LI' && el !== skipLi);
+      for (const li of items) {
+        const rect = li.getBoundingClientRect();
+        if (clientY < rect.top + rect.height / 2) return li;
+      }
+      return null;
     },
 
     _endDrag(e) {
