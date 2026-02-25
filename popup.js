@@ -5,6 +5,10 @@
 (function () {
   'use strict';
 
+  function escapeHTML(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
   /* ============================================================
      STATE — in-memory working copy
      ============================================================ */
@@ -65,6 +69,147 @@
   };
 
   /* ============================================================
+     LINKS — URL detection, auto-linkify, open-in-new-tab button
+     ============================================================ */
+  const LINKS = {
+    floatBtn: null,
+    activeLink: null,
+    _hideTimer: null,
+
+    init(editorEl, appEl) {
+      const btn = document.createElement('button');
+      btn.className = 'link-open-btn';
+      btn.title = 'Open in new tab';
+      btn.setAttribute('aria-label', 'Open link in new tab');
+      btn.innerHTML =
+        '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">' +
+        '<path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M8 1h3m0 0v3M11 1L5.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
+      appEl.appendChild(btn);
+      LINKS.floatBtn = btn;
+
+      // Don't steal focus from editor
+      btn.addEventListener('mousedown', (e) => e.preventDefault());
+
+      btn.addEventListener('click', () => {
+        if (LINKS.activeLink) {
+          const href = LINKS.activeLink.href;
+          if (/^https?:\/\//i.test(href)) chrome.tabs.create({ url: href });
+        }
+      });
+
+      // Keep button visible while hovering over it
+      btn.addEventListener('mouseenter', () => clearTimeout(LINKS._hideTimer));
+      btn.addEventListener('mouseleave', () => LINKS.hide());
+
+      // Show button when hovering over a link in the editor
+      editorEl.addEventListener('mouseover', (e) => {
+        const link = e.target.closest('a[href]');
+        if (link) {
+          clearTimeout(LINKS._hideTimer);
+          LINKS.show(link);
+        }
+      });
+
+      // Start hide timer when leaving a link (gives time to reach the button)
+      editorEl.addEventListener('mouseout', (e) => {
+        if (e.target.closest('a[href]')) {
+          LINKS._hideTimer = setTimeout(() => LINKS.hide(), 120);
+        }
+      });
+    },
+
+    show(linkEl) {
+      LINKS.activeLink = linkEl;
+      const rect = linkEl.getBoundingClientRect();
+      const appRect = document.querySelector('.app').getBoundingClientRect();
+      const btnWidth = 24;
+      let left = rect.right + 3;
+      if (left + btnWidth > appRect.right - 2) left = appRect.right - btnWidth - 2;
+      const top = rect.top + Math.round((rect.height - 20) / 2);
+      const btn = LINKS.floatBtn;
+      btn.style.left = left + 'px';
+      btn.style.top = top + 'px';
+      btn.classList.add('is-visible');
+    },
+
+    hide() {
+      LINKS.activeLink = null;
+      if (LINKS.floatBtn) LINKS.floatBtn.classList.remove('is-visible');
+    },
+
+    /** Replace the URL immediately before the caret with an <a> tag. */
+    tryAutoLinkBeforeCaret() {
+      const sel = window.getSelection();
+      if (!sel || !sel.rangeCount) return false;
+      const range = sel.getRangeAt(0);
+      if (!range.collapsed) return false;
+      const node = range.startContainer;
+      if (node.nodeType !== Node.TEXT_NODE) return false;
+      if (!EDITOR.el || !EDITOR.el.contains(node)) return false;
+      // Don't nest links
+      let p = node.parentElement;
+      while (p && p !== EDITOR.el) {
+        if (p.tagName === 'A') return false;
+        p = p.parentElement;
+      }
+      const textBefore = node.textContent.slice(0, range.startOffset);
+      const m = textBefore.match(/(https?:\/\/\S+)$/);
+      if (!m) return false;
+      const rawUrl = m[1];
+      const url = rawUrl.replace(/[.,;:!?)\]'"]+$/, '');
+      if (url.length < 8) return false; // sanity: at least "http://x"
+      const urlOffset = range.startOffset - rawUrl.length;
+      const before = node.textContent.slice(0, urlOffset);
+      const after = node.textContent.slice(range.startOffset);
+      const parent = node.parentNode;
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.textContent = url;
+      const afterNode = document.createTextNode(after);
+      if (before) {
+        node.textContent = before;
+        parent.insertBefore(anchor, node.nextSibling);
+      } else {
+        parent.insertBefore(anchor, node);
+        parent.removeChild(node);
+      }
+      parent.insertBefore(afterNode, anchor.nextSibling);
+      // Reposition caret to start of afterNode
+      const newRange = document.createRange();
+      newRange.setStart(afterNode, 0);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      STORAGE.scheduleSave();
+      return true;
+    },
+
+    /** Convert plain text (possibly multi-line) with URLs into linkified HTML. */
+    linkifyPlainText(text) {
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      return lines.map((line) => {
+        const re = /(https?:\/\/\S+)/g;
+        let result = '';
+        let last = 0;
+        let match;
+        while ((match = re.exec(line)) !== null) {
+          const rawUrl = match[1];
+          const url = rawUrl.replace(/[.,;:!?)\]'"]+$/, '');
+          const trimmed = rawUrl.length - url.length;
+          result += escapeHTML(line.slice(last, match.index));
+          result += `<a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`;
+          if (trimmed > 0) result += escapeHTML(rawUrl.slice(-trimmed));
+          last = match.index + rawUrl.length;
+        }
+        result += escapeHTML(line.slice(last));
+        return result;
+      }).join('<br>');
+    },
+  };
+
+  /* ============================================================
      EDITOR — contenteditable wrapper
      ============================================================ */
   const EDITOR = {
@@ -94,6 +239,23 @@
           if (e.key === 'i') { e.preventDefault(); document.execCommand('italic'); }
           if (e.key === 'u') { e.preventDefault(); document.execCommand('underline'); }
         }
+        // Auto-linkify the word before the caret when a word boundary is typed
+        if (e.key === ' ' || e.key === 'Enter') {
+          LINKS.tryAutoLinkBeforeCaret();
+        }
+      });
+
+      // Linkify URLs in pasted plain text
+      el.addEventListener('paste', (e) => {
+        const htmlData = e.clipboardData.getData('text/html');
+        const text = e.clipboardData.getData('text/plain');
+        // If clipboard already carries linked HTML, let the browser handle it
+        if (htmlData && /<a[\s>]/i.test(htmlData)) return;
+        if (!text || !/https?:\/\//i.test(text)) return;
+        e.preventDefault();
+        const html = LINKS.linkifyPlainText(text);
+        document.execCommand('insertHTML', false, html);
+        STORAGE.scheduleSave();
       });
     },
 
@@ -446,6 +608,9 @@
 
     // Mount toolbar
     TOOLBAR.render(toolbarEl);
+
+    // Mount link button
+    LINKS.init(editorEl, document.getElementById('app'));
 
     // Selection change → update toolbar active state
     document.addEventListener('selectionchange', () => {
