@@ -540,6 +540,7 @@ body {
   display: block;
   margin: 4px 0;
   border-radius: var(--radius-sm);
+  cursor: default;
 }
 
 /* Resize overlay — position:fixed, outside the editor DOM */
