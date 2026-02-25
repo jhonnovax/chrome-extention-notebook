@@ -411,10 +411,9 @@
       { id: 'italic',           label: 'I',  title: 'Italic (Ctrl+I)',  type: 'state' },
       { id: 'underline',        label: 'U',  title: 'Underline (Ctrl+U)', type: 'state' },
       { id: 'strikeThrough',    label: 'S',  title: 'Strikethrough',    type: 'state' },
-      { id: '__sep1__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'h1',               label: 'H1', title: 'Heading 1',        type: 'block', block: 'h1' },
       { id: 'h2',               label: 'H2', title: 'Heading 2',        type: 'block', block: 'h2' },
-      { id: '__sep2__',         label: '',   title: '',                 type: 'sep'   },
+      { id: '__sep1__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'insertOrderedList',   label: '', title: 'Ordered list',    type: 'state',
         icon:
           '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
@@ -438,9 +437,7 @@
           '<path d="M0 5.5h15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
           '<path d="M0 9h15" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>' +
           '</svg>' },
-      { id: '__sep3__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
-      { id: '__sep4__',         label: '',   title: '',                 type: 'sep'   },
       {
         id: 'highlightMenu',
         label: '',
@@ -453,7 +450,7 @@
           { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', color: '#fee2e2' },
         ],
       },
-      { id: '__sep5__',         label: '',   title: '',                 type: 'sep'   },
+      { id: '__sep2__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'clearContent',     label: '',   title: 'Clear all content', type: 'action',
         btnClass: 'toolbar-btn--danger',
         icon:
