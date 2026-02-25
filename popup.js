@@ -544,6 +544,45 @@
   const EDITOR = {
     el: null,
 
+    _stripFontStyleDecls(styleText) {
+      if (!styleText) return '';
+      const parts = styleText
+        .split(';')
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      const kept = parts.filter((part) => {
+        const idx = part.indexOf(':');
+        if (idx === -1) return false;
+        const prop = part.slice(0, idx).trim().toLowerCase();
+        return prop !== 'font-family' && prop !== 'font-size' && prop !== 'font';
+      });
+
+      return kept.join('; ');
+    },
+
+    sanitizePastedHTML(html) {
+      const tpl = document.createElement('template');
+      tpl.innerHTML = html;
+
+      tpl.content.querySelectorAll('*').forEach((node) => {
+        const style = node.getAttribute('style');
+        if (style != null) {
+          const sanitizedStyle = EDITOR._stripFontStyleDecls(style);
+          if (sanitizedStyle) node.setAttribute('style', sanitizedStyle);
+          else node.removeAttribute('style');
+        }
+
+        // Remove deprecated font-tag attributes that can override editor defaults.
+        if (node.tagName === 'FONT') {
+          node.removeAttribute('face');
+          node.removeAttribute('size');
+        }
+      });
+
+      return tpl.innerHTML;
+    },
+
     mount(el) {
       EDITOR.el = el;
 
@@ -575,17 +614,25 @@
         }
       });
 
-      // Linkify URLs in pasted plain text
+      // Keep rich pasted content, but strip font-size/font-family overrides.
       el.addEventListener('paste', (e) => {
-        const htmlData = e.clipboardData.getData('text/html');
-        const text = e.clipboardData.getData('text/plain');
-        // If clipboard already carries linked HTML, let the browser handle it
-        if (htmlData && /<a[\s>]/i.test(htmlData)) return;
-        if (!text || !/https?:\/\//i.test(text)) return;
-        e.preventDefault();
-        const html = LINKS.linkifyPlainText(text);
-        document.execCommand('insertHTML', false, html);
-        STORAGE.scheduleSave();
+        const htmlData = (e.clipboardData && e.clipboardData.getData('text/html')) || '';
+        const text = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
+
+        if (htmlData) {
+          e.preventDefault();
+          const sanitized = EDITOR.sanitizePastedHTML(htmlData);
+          document.execCommand('insertHTML', false, sanitized);
+          STORAGE.scheduleSave();
+          return;
+        }
+
+        if (text && /https?:\/\//i.test(text)) {
+          e.preventDefault();
+          const html = LINKS.linkifyPlainText(text);
+          document.execCommand('insertHTML', false, html);
+          STORAGE.scheduleSave();
+        }
       });
     },
 
