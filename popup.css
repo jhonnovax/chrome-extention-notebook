@@ -529,6 +529,10 @@ body {
   margin: 0.15em 0;
 }
 
+.editor li.is-reordering {
+  opacity: 0.6;
+}
+
 .editor a {
   color: var(--color-accent);
   text-decoration: underline;
@@ -595,4 +599,64 @@ body {
   border-radius: 3px;
   cursor: se-resize;
   pointer-events: all;   /* receives mouse events despite parent pointer-events:none */
+}
+
+/* List-item drag handle — fixed overlay outside editor DOM */
+.list-drag-handle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background:
+    linear-gradient(160deg, var(--color-surface) 0%, var(--color-surface-hover) 100%);
+  color: var(--color-text-secondary);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.92);
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+  z-index: 120;
+  cursor: pointer;
+}
+
+.list-drag-handle.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.list-drag-handle:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent);
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.18),
+    0 0 0 2px var(--color-accent-subtle);
+}
+
+.list-drag-handle.is-dragging {
+  cursor: grabbing;
+  pointer-events: none;
+}
+
+.list-drag-handle svg {
+  width: 14px;
+  height: 14px;
+}
+
+body.is-list-dragging {
+  user-select: none;
+  cursor: grabbing;
 }

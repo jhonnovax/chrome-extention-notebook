@@ -321,6 +321,191 @@
   };
 
   /* ============================================================
+     LIST_REORDER — hover handle + drag-to-reorder list items
+     ============================================================ */
+  const LIST_REORDER = {
+    _editorEl: null,
+    _handleEl: null,
+    _hoverLi: null,
+    _dragLi: null,
+    _dragList: null,
+    _isDragging: false,
+    _didMove: false,
+    _isHandleHovered: false,
+    _onDragMove: null,
+    _onDragUp: null,
+
+    init(editorEl) {
+      LIST_REORDER._editorEl = editorEl;
+      LIST_REORDER._buildHandle();
+
+      editorEl.addEventListener('mousemove', (e) => {
+        if (LIST_REORDER._isDragging) return;
+        const li = LIST_REORDER._getSortableLi(e.target);
+        if (li !== LIST_REORDER._hoverLi) {
+          LIST_REORDER._hoverLi = li;
+          LIST_REORDER._repositionHandle();
+        }
+      });
+
+      editorEl.addEventListener('mouseleave', (e) => {
+        if (LIST_REORDER._isDragging) return;
+        if (LIST_REORDER._isHandleTarget(e.relatedTarget)) return;
+        if (!editorEl.contains(e.relatedTarget)) {
+          LIST_REORDER._hoverLi = null;
+          LIST_REORDER._hideHandle();
+        }
+      });
+
+      editorEl.addEventListener('scroll', () => {
+        if (!LIST_REORDER._isDragging) LIST_REORDER._repositionHandle();
+      });
+
+      window.addEventListener('resize', () => {
+        if (!LIST_REORDER._isDragging) LIST_REORDER._repositionHandle();
+      });
+    },
+
+    _buildHandle() {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'list-drag-handle';
+      btn.setAttribute('aria-label', 'Drag to reorder list item');
+      btn.innerHTML =
+        '<svg viewBox="0 0 10 10" fill="none" aria-hidden="true">' +
+        '<circle cx="3" cy="2" r="1" fill="currentColor"/>' +
+        '<circle cx="7" cy="2" r="1" fill="currentColor"/>' +
+        '<circle cx="3" cy="5" r="1" fill="currentColor"/>' +
+        '<circle cx="7" cy="5" r="1" fill="currentColor"/>' +
+        '<circle cx="3" cy="8" r="1" fill="currentColor"/>' +
+        '<circle cx="7" cy="8" r="1" fill="currentColor"/>' +
+        '</svg>';
+      btn.addEventListener('mousedown', (e) => LIST_REORDER._startDrag(e));
+      btn.addEventListener('mouseenter', () => {
+        LIST_REORDER._isHandleHovered = true;
+        LIST_REORDER._handleEl.classList.add('is-visible');
+      });
+      btn.addEventListener('mouseleave', () => {
+        LIST_REORDER._isHandleHovered = false;
+        if (!LIST_REORDER._isDragging) {
+          LIST_REORDER._hideHandle();
+        }
+      });
+      document.body.appendChild(btn);
+      LIST_REORDER._handleEl = btn;
+    },
+
+    _isHandleTarget(node) {
+      return !!(LIST_REORDER._handleEl && node && (node === LIST_REORDER._handleEl || LIST_REORDER._handleEl.contains(node)));
+    },
+
+    _getSortableLi(target) {
+      const li = target && target.closest ? target.closest('li') : null;
+      if (!li || !LIST_REORDER._editorEl || !LIST_REORDER._editorEl.contains(li)) return null;
+      const parent = li.parentElement;
+      if (!parent) return null;
+      const tag = parent.tagName;
+      if (tag !== 'UL' && tag !== 'OL') return null;
+      return li;
+    },
+
+    _repositionHandle() {
+      const li = LIST_REORDER._hoverLi;
+      if (!li || !LIST_REORDER._editorEl || !LIST_REORDER._editorEl.contains(li)) {
+        LIST_REORDER._hoverLi = null;
+        LIST_REORDER._hideHandle();
+        return;
+      }
+
+      LIST_REORDER._handleEl.classList.add('is-visible');
+      const rect = li.getBoundingClientRect();
+      const size = 18;
+      const top = rect.top + (rect.height - size) / 2;
+      const left = rect.left - size - 6;
+      LIST_REORDER._handleEl.style.top = Math.round(top) + 'px';
+      LIST_REORDER._handleEl.style.left = Math.round(left) + 'px';
+    },
+
+    _hideHandle() {
+      if (!LIST_REORDER._handleEl) return;
+      if (LIST_REORDER._isHandleHovered) return;
+      LIST_REORDER._handleEl.classList.remove('is-visible');
+    },
+
+    _startDrag(e) {
+      const li = LIST_REORDER._hoverLi;
+      if (!li) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      LIST_REORDER._dragLi = li;
+      LIST_REORDER._dragList = li.parentElement;
+      LIST_REORDER._isDragging = true;
+      LIST_REORDER._didMove = false;
+
+      li.classList.add('is-reordering');
+      LIST_REORDER._handleEl.classList.add('is-dragging');
+      document.body.classList.add('is-list-dragging');
+
+      LIST_REORDER._onDragMove = (ev) => LIST_REORDER._dragMove(ev);
+      LIST_REORDER._onDragUp = (ev) => LIST_REORDER._endDrag(ev);
+      document.addEventListener('mousemove', LIST_REORDER._onDragMove);
+      document.addEventListener('mouseup', LIST_REORDER._onDragUp);
+      LIST_REORDER._dragMove(e);
+    },
+
+    _dragMove(e) {
+      if (!LIST_REORDER._isDragging || !LIST_REORDER._dragLi || !LIST_REORDER._dragList) return;
+
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const overLi = LIST_REORDER._getSortableLi(target);
+      if (overLi && overLi !== LIST_REORDER._dragLi && overLi.parentElement === LIST_REORDER._dragList) {
+        const rect = overLi.getBoundingClientRect();
+        const before = e.clientY < rect.top + rect.height / 2;
+        const ref = before ? overLi : overLi.nextSibling;
+        if (ref !== LIST_REORDER._dragLi) {
+          LIST_REORDER._dragList.insertBefore(LIST_REORDER._dragLi, ref);
+          LIST_REORDER._didMove = true;
+        }
+      }
+
+      LIST_REORDER._hoverLi = LIST_REORDER._dragLi;
+      LIST_REORDER._repositionHandle();
+    },
+
+    _endDrag(e) {
+      if (!LIST_REORDER._isDragging) return;
+
+      document.removeEventListener('mousemove', LIST_REORDER._onDragMove);
+      document.removeEventListener('mouseup', LIST_REORDER._onDragUp);
+      LIST_REORDER._onDragMove = null;
+      LIST_REORDER._onDragUp = null;
+
+      if (LIST_REORDER._dragLi) {
+        LIST_REORDER._dragLi.classList.remove('is-reordering');
+      }
+      LIST_REORDER._handleEl.classList.remove('is-dragging');
+      document.body.classList.remove('is-list-dragging');
+      LIST_REORDER._isHandleHovered = false;
+
+      const moved = LIST_REORDER._didMove;
+      LIST_REORDER._isDragging = false;
+      LIST_REORDER._dragLi = null;
+      LIST_REORDER._dragList = null;
+      LIST_REORDER._didMove = false;
+
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      LIST_REORDER._hoverLi = LIST_REORDER._getSortableLi(target);
+      LIST_REORDER._repositionHandle();
+
+      if (moved) {
+        TOOLBAR.updateClearState();
+        STORAGE.scheduleSave();
+      }
+    },
+  };
+
+  /* ============================================================
      EDITOR — contenteditable wrapper
      ============================================================ */
   const EDITOR = {
@@ -897,6 +1082,9 @@
 
     // Wire up image paste + resize overlay
     IMAGES.init(editorEl);
+
+    // Wire up list item drag-reorder handle
+    LIST_REORDER.init(editorEl);
 
     // Selection change → update toolbar active state
     document.addEventListener('selectionchange', () => {
