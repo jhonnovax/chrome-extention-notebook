@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <clipPath id="c">
+      <rect width="128" height="128" rx="22"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#c)">
+
+    <!-- Right half background (pale grey-teal) -->
+    <rect width="128" height="128" fill="#DCE9EA"/>
+
+    <!-- Left half background (sky blue) -->
+    <rect width="64" height="128" fill="#7ECDE8"/>
+
+    <!-- 3 pill lines (left side) -->
+    <rect x="14" y="38" width="37" height="10" rx="5" fill="#4640A6"/>
+    <rect x="14" y="56" width="37" height="10" rx="5" fill="#4640A6"/>
+    <rect x="14" y="74" width="37" height="10" rx="5" fill="#4640A6"/>
+
+    <!-- Arrow shaft -->
+    <line x1="75" y1="64" x2="104" y2="64"
+          stroke="#4640A6" stroke-width="9" stroke-linecap="round"/>
+
+    <!-- Arrow head -->
+    <polyline points="90,50 108,64 90,78"
+              fill="none" stroke="#4640A6" stroke-width="9"
+              stroke-linecap="round" stroke-linejoin="round"/>
+
+  </g>
+</svg>
