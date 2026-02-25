@@ -155,6 +155,172 @@
   };
 
   /* ============================================================
+     IMAGES — clipboard image paste + hover-to-resize overlay
+     ============================================================ */
+  const IMAGES = {
+    overlay:    null,
+    badge:      null,
+    handle:     null,
+    currentImg: null,
+    isDragging: false,
+    _drag:      null,  // { startX, startY, startW, startH, ratio }
+    _editorEl:  null,
+
+    init(editorEl) {
+      IMAGES._editorEl = editorEl;
+
+      // Capture-phase paste: handle images before EDITOR's bubble-phase handler
+      editorEl.addEventListener('paste', (e) => {
+        const items = e.clipboardData && Array.from(e.clipboardData.items);
+        if (!items) return;
+        const imageItem = items.find((i) => i.type.startsWith('image/'));
+        if (!imageItem) return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const blob = imageItem.getAsFile();
+        if (!blob) return;
+
+        // Capture caret position before async FileReader
+        let savedRange = null;
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount) {
+          const r = sel.getRangeAt(0);
+          if (editorEl.contains(r.commonAncestorContainer)) {
+            savedRange = r.cloneRange();
+          }
+        }
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const img = document.createElement('img');
+          img.src = evt.target.result;
+          img.onload = () => {
+            // Fit within editor content width (padding: 18px × 2 = 36px)
+            const maxW = editorEl.clientWidth - 36;
+            if (img.naturalWidth > maxW) {
+              img.style.width = maxW + 'px';
+            }
+
+            if (savedRange && editorEl.contains(savedRange.commonAncestorContainer)) {
+              savedRange.deleteContents();
+              savedRange.insertNode(img);
+              savedRange.setStartAfter(img);
+              savedRange.collapse(true);
+              const s = window.getSelection();
+              s.removeAllRanges();
+              s.addRange(savedRange);
+            } else {
+              editorEl.appendChild(img);
+            }
+            STORAGE.scheduleSave();
+          };
+        };
+        reader.readAsDataURL(blob);
+      }, true /* capture phase */);
+
+      // Build overlay DOM (once)
+      IMAGES._buildOverlay(editorEl);
+
+      // Show overlay on image click; hide when clicking non-image content
+      editorEl.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG' && editorEl.contains(e.target)) {
+          IMAGES.showOverlay(e.target);
+        } else if (!IMAGES.isDragging) {
+          IMAGES.hideOverlay();
+        }
+      });
+
+      // Hide when clicking anywhere outside the editor (handle stops propagation itself)
+      document.addEventListener('mousedown', (e) => {
+        if (!IMAGES.isDragging && !editorEl.contains(e.target) && e.target !== IMAGES.handle) {
+          IMAGES.hideOverlay();
+        }
+      });
+
+      // Reposition overlay on editor scroll
+      editorEl.addEventListener('scroll', () => {
+        if (IMAGES.currentImg) IMAGES._reposition();
+      });
+    },
+
+    _buildOverlay(editorEl) {
+      const ov = document.createElement('div');
+      ov.className = 'img-resize-overlay';
+      ov.innerHTML =
+        '<div class="img-resize-badge"></div>' +
+        '<div class="img-resize-handle"></div>';
+      document.body.appendChild(ov);
+
+      IMAGES.overlay = ov;
+      IMAGES.badge   = ov.querySelector('.img-resize-badge');
+      IMAGES.handle  = ov.querySelector('.img-resize-handle');
+
+      // Drag-to-resize from SE corner handle
+      IMAGES.handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const img = IMAGES.currentImg;
+        if (!img) return;
+
+        IMAGES.isDragging = true;
+        const rect = img.getBoundingClientRect();
+        IMAGES._drag = {
+          startX: e.clientX,
+          startY: e.clientY,
+          startW: rect.width,
+          startH: rect.height,
+          ratio:  rect.height / rect.width,
+        };
+
+        const onMove = (ev) => {
+          const d = IMAGES._drag;
+          const newW = Math.max(20, Math.round(d.startW + (ev.clientX - d.startX)));
+          const newH = Math.round(newW * d.ratio);
+          img.style.width  = newW + 'px';
+          img.style.height = newH + 'px';
+          IMAGES._reposition();
+          STORAGE.scheduleSave();
+        };
+
+        const onUp = () => {
+          IMAGES.isDragging = false;
+          IMAGES._drag = null;
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',   onUp);
+        };
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+      });
+    },
+
+    _reposition() {
+      const img = IMAGES.currentImg;
+      if (!img || !IMAGES.overlay) return;
+      const r = img.getBoundingClientRect();
+      const ov = IMAGES.overlay;
+      ov.style.left   = r.left   + 'px';
+      ov.style.top    = r.top    + 'px';
+      ov.style.width  = r.width  + 'px';
+      ov.style.height = r.height + 'px';
+      IMAGES.badge.textContent = Math.round(r.width) + ' × ' + Math.round(r.height);
+    },
+
+    showOverlay(img) {
+      IMAGES.currentImg = img;
+      IMAGES.overlay.style.display = 'block';
+      IMAGES._reposition();
+    },
+
+    hideOverlay() {
+      if (IMAGES.overlay) IMAGES.overlay.style.display = 'none';
+      IMAGES.currentImg = null;
+    },
+  };
+
+  /* ============================================================
      EDITOR — contenteditable wrapper
      ============================================================ */
   const EDITOR = {
@@ -625,6 +791,9 @@
 
     // Wire up link click-to-open
     LINKS.init(editorEl);
+
+    // Wire up image paste + resize overlay
+    IMAGES.init(editorEl);
 
     // Selection change → update toolbar active state
     document.addEventListener('selectionchange', () => {
