@@ -1,0 +1,418 @@
+/* ============================================================
+   CSS Custom Properties — Light Mode (Default)
+   ============================================================ */
+:root {
+  /* Surfaces */
+  --color-bg:            #f8f8fa;
+  --color-surface:       #ffffff;
+  --color-surface-hover: #f0f0f5;
+  --color-border:        #e2e2ea;
+
+  /* Text */
+  --color-text-primary:   #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-muted:     #a1a1aa;
+
+  /* Accent */
+  --color-accent:        #4f46e5;
+  --color-accent-subtle: #ede9fe;
+
+  /* Motion */
+  --transition-fast:   0.12s ease;
+  --transition-medium: 0.22s ease;
+
+  /* Geometry */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-tab: 6px 6px 0 0;
+}
+
+/* ============================================================
+   Dark Mode Overrides
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg:            #0f0f11;
+    --color-surface:       #1a1a1f;
+    --color-surface-hover: #242430;
+    --color-border:        #2e2e3a;
+
+    --color-text-primary:   #f4f4f5;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted:     #52525b;
+
+    --color-accent:        #818cf8;
+    --color-accent-subtle: #1e1b4b;
+  }
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 500px;
+  height: 660px;
+  overflow: hidden;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   App Shell
+   ============================================================ */
+.app {
+  display: flex;
+  flex-direction: column;
+  width: 500px;
+  height: 660px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+/* ============================================================
+   Tab Bar
+   ============================================================ */
+.tab-bar {
+  display: flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  height: 40px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  gap: 0;
+}
+
+.tab-list {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  gap: 2px;
+  padding: 6px 4px 0;
+}
+
+.tab-list::-webkit-scrollbar {
+  height: 3px;
+}
+.tab-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tab-list::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* Individual tab item */
+.tab-item {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 34px;
+  max-width: 160px;
+  min-width: 60px;
+  padding: 0 10px 0 12px;
+  gap: 6px;
+  border-radius: var(--radius-tab);
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+  position: relative;
+}
+
+.tab-item:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.tab-item.is-active {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+  border-bottom-color: var(--color-surface); /* merge with editor */
+  font-weight: 500;
+}
+
+/* Active bottom accent */
+.tab-item.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: 2px 2px 0 0;
+}
+
+/* Tab label */
+.tab-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12.5px;
+  line-height: 1;
+}
+
+/* Tab rename input */
+.tab-rename-input {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 4px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+/* Hide label+delete during rename */
+.tab-item--rename .tab-label,
+.tab-item--rename .tab-delete-btn {
+  display: none;
+}
+
+/* Tab delete button */
+.tab-delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 3px;
+  opacity: 0;
+  padding: 0;
+  transition:
+    opacity var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.tab-item:hover .tab-delete-btn,
+.tab-item.is-active .tab-delete-btn {
+  opacity: 1;
+}
+
+.tab-delete-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.tab-delete-btn:active {
+  background: var(--color-border);
+}
+
+/* Hide delete when only 1 tab */
+.tab-delete-btn[disabled] {
+  display: none;
+}
+
+/* Add tab button */
+.tab-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.tab-add-btn:hover {
+  color: var(--color-accent);
+  background: var(--color-surface-hover);
+}
+
+/* ============================================================
+   Toolbar
+   ============================================================ */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 8px;
+  gap: 2px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.toolbar-btn:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.toolbar-btn:active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+.toolbar-btn.is-active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+}
+
+/* Toolbar separator */
+.toolbar-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Bold/Italic/Underline label styling */
+.toolbar-btn[data-command="bold"]          { font-weight: 700; font-size: 13px; }
+.toolbar-btn[data-command="italic"]        { font-style: italic; }
+.toolbar-btn[data-command="underline"]     { text-decoration: underline; }
+.toolbar-btn[data-command="strikeThrough"] { text-decoration: line-through; }
+
+/* ============================================================
+   Editor
+   ============================================================ */
+.editor {
+  flex: 1;
+  min-height: 0;
+  padding: 16px 18px;
+  overflow-y: auto;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  line-height: 1.7;
+  outline: none;
+  font-family: "Georgia", "Times New Roman", serif;
+  word-wrap: break-word;
+  transition: opacity var(--transition-fast);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.editor::-webkit-scrollbar {
+  width: 4px;
+}
+.editor::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* Placeholder */
+.editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  font-style: italic;
+}
+
+/* Editor fade transition on tab switch */
+.editor.is-switching {
+  opacity: 0.4;
+}
+
+/* Editor content styles */
+.editor h1 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0.4em 0 0.2em;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.editor h2 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0.6em 0 0.2em;
+  color: var(--color-text-primary);
+  line-height: 1.35;
+}
+
+.editor p {
+  margin: 0 0 0.4em;
+}
+
+.editor ul,
+.editor ol {
+  margin: 0.4em 0;
+  padding-left: 1.6em;
+}
+
+.editor li {
+  margin: 0.15em 0;
+}
+
+.editor a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.editor strong { font-weight: 700; }
+.editor em     { font-style: italic; }
+
+/* Scrollbar for editor */
+.editor {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}

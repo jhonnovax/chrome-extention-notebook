@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Notebook",
+  "version": "1.0.0",
+  "description": "A stylish, tabbed notebook in your browser toolbar.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Notebook"
+  },
+  "permissions": ["storage"]
+}

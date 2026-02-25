@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notebook</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- Tab Bar -->
+    <div class="tab-bar" id="tab-bar" role="tablist" aria-label="Notebook tabs">
+      <div class="tab-list" id="tab-list">
+        <!-- Tabs rendered by JS -->
+      </div>
+      <button
+        class="tab-add-btn"
+        id="tab-add-btn"
+        title="New tab"
+        aria-label="Add new tab"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar" id="toolbar" role="toolbar" aria-label="Text formatting">
+      <!-- Buttons rendered by JS -->
+    </div>
+
+    <!-- Editor -->
+    <div
+      class="editor"
+      id="editor"
+      role="textbox"
+      aria-multiline="true"
+      aria-label="Note content"
+      contenteditable="true"
+      spellcheck="true"
+      data-placeholder="Start writing…"
+    ></div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
