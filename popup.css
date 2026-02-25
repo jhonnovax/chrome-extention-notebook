@@ -453,40 +453,9 @@ body {
 .editor a {
   color: var(--color-accent);
   text-decoration: underline;
-}
-
-/* ============================================================
-   Link open button (floating, appears on link hover)
-   ============================================================ */
-.link-open-btn {
-  position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 20px;
-  padding: 0;
-  border: 1px solid var(--color-accent);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-accent);
   cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition:
-    opacity var(--transition-fast),
-    background var(--transition-fast);
-  z-index: 100;
 }
 
-.link-open-btn.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.link-open-btn:hover {
-  background: var(--color-accent-subtle);
-}
 
 .editor strong { font-weight: 700; }
 .editor em     { font-style: italic; }

@@ -69,74 +69,19 @@
   };
 
   /* ============================================================
-     LINKS — URL detection, auto-linkify, open-in-new-tab button
+     LINKS — URL detection, auto-linkify, click-to-open
      ============================================================ */
   const LINKS = {
-    floatBtn: null,
-    activeLink: null,
-    _hideTimer: null,
-
-    init(editorEl, appEl) {
-      const btn = document.createElement('button');
-      btn.className = 'link-open-btn';
-      btn.title = 'Open in new tab';
-      btn.setAttribute('aria-label', 'Open link in new tab');
-      btn.innerHTML =
-        '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true">' +
-        '<path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
-        '<path d="M8 1h3m0 0v3M11 1L5.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '</svg>';
-      appEl.appendChild(btn);
-      LINKS.floatBtn = btn;
-
-      // Don't steal focus from editor
-      btn.addEventListener('mousedown', (e) => e.preventDefault());
-
-      btn.addEventListener('click', () => {
-        if (LINKS.activeLink) {
-          const href = LINKS.activeLink.href;
+    init(editorEl) {
+      // Open links in a new tab on click
+      editorEl.addEventListener('click', (e) => {
+        const link = e.target.closest('a[href]');
+        if (link) {
+          e.preventDefault();
+          const href = link.href;
           if (/^https?:\/\//i.test(href)) chrome.tabs.create({ url: href });
         }
       });
-
-      // Keep button visible while hovering over it
-      btn.addEventListener('mouseenter', () => clearTimeout(LINKS._hideTimer));
-      btn.addEventListener('mouseleave', () => LINKS.hide());
-
-      // Show button when hovering over a link in the editor
-      editorEl.addEventListener('mouseover', (e) => {
-        const link = e.target.closest('a[href]');
-        if (link) {
-          clearTimeout(LINKS._hideTimer);
-          LINKS.show(link);
-        }
-      });
-
-      // Start hide timer when leaving a link (gives time to reach the button)
-      editorEl.addEventListener('mouseout', (e) => {
-        if (e.target.closest('a[href]')) {
-          LINKS._hideTimer = setTimeout(() => LINKS.hide(), 120);
-        }
-      });
-    },
-
-    show(linkEl) {
-      LINKS.activeLink = linkEl;
-      const rect = linkEl.getBoundingClientRect();
-      const appRect = document.querySelector('.app').getBoundingClientRect();
-      const btnWidth = 24;
-      let left = rect.right + 3;
-      if (left + btnWidth > appRect.right - 2) left = appRect.right - btnWidth - 2;
-      const top = rect.top + Math.round((rect.height - 20) / 2);
-      const btn = LINKS.floatBtn;
-      btn.style.left = left + 'px';
-      btn.style.top = top + 'px';
-      btn.classList.add('is-visible');
-    },
-
-    hide() {
-      LINKS.activeLink = null;
-      if (LINKS.floatBtn) LINKS.floatBtn.classList.remove('is-visible');
     },
 
     /** Replace the URL immediately before the caret with an <a> tag. */
@@ -678,8 +623,8 @@
     // Mount toolbar
     TOOLBAR.render(toolbarEl);
 
-    // Mount link button
-    LINKS.init(editorEl, document.getElementById('app'));
+    // Wire up link click-to-open
+    LINKS.init(editorEl);
 
     // Selection change → update toolbar active state
     document.addEventListener('selectionchange', () => {
