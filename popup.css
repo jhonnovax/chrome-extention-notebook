@@ -344,6 +344,20 @@ body {
   flex-shrink: 0;
 }
 
+/* Disabled toolbar button */
+.toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Danger toolbar button (e.g. clear content) */
+.toolbar-btn--danger:hover {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
 /* Bold/Italic/Underline label styling */
 .toolbar-btn[data-command="bold"]          { font-weight: 700; font-size: 13px; }
 .toolbar-btn[data-command="italic"]        { font-style: italic; }

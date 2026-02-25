@@ -224,6 +224,7 @@
         if (el.innerHTML === '<br>') {
           el.innerHTML = '';
         }
+        TOOLBAR.updateClearState();
         STORAGE.scheduleSave();
       });
 
@@ -268,6 +269,7 @@
     setHTML(html) {
       if (!EDITOR.el) return;
       EDITOR.el.innerHTML = html || '';
+      TOOLBAR.updateClearState();
     },
 
     focus() {
@@ -323,6 +325,22 @@
           '</svg>' },
       { id: '__sep3__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
+      { id: '__sep4__',         label: '',   title: '',                 type: 'sep'   },
+      { id: 'clearContent',     label: '',   title: 'Clear all content', type: 'action',
+        btnClass: 'toolbar-btn--danger',
+        icon:
+          '<svg width="13" height="14" viewBox="0 0 13 14" fill="none" aria-hidden="true">' +
+          '<path d="M4.5 3V2a.5.5 0 01.5-.5h3a.5.5 0 01.5.5V3" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>' +
+          '<path d="M1 3h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+          '<path d="M2.5 3v8.5a1 1 0 001 1h6a1 1 0 001-1V3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>' +
+          '<path d="M5 5.5v5M8 5.5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.65"/>' +
+          '</svg>',
+        action() {
+          if (!confirm('Clear all content in this note? This cannot be undone.')) return;
+          EDITOR.setHTML('');
+          STORAGE.scheduleSave();
+        },
+      },
     ],
 
     render(el) {
@@ -339,7 +357,7 @@
         }
 
         const btn = document.createElement('button');
-        btn.className = 'toolbar-btn';
+        btn.className = 'toolbar-btn' + (cmd.btnClass ? ' ' + cmd.btnClass : '');
         if (cmd.icon) {
           btn.innerHTML = cmd.icon;
         } else {
@@ -385,6 +403,9 @@
         } else {
           document.execCommand('formatBlock', false, target);
         }
+      } else if (cmd.type === 'action') {
+        if (cmd.action) cmd.action();
+        return; // scheduleSave handled inside action if needed
       } else if (cmd.type === 'link') {
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed) {
@@ -424,6 +445,13 @@
         btn.classList.toggle('is-active', isActive);
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
       });
+    },
+
+    updateClearState() {
+      if (!TOOLBAR.el) return;
+      const btn = TOOLBAR.el.querySelector('[data-cmd-id="clearContent"]');
+      if (!btn) return;
+      btn.disabled = EDITOR.getHTML() === '';
     },
   };
 
