@@ -17,6 +17,10 @@
   --color-accent:        #4f46e5;
   --color-accent-subtle: #ede9fe;
 
+  /* Danger */
+  --color-danger:        #e53535;
+  --color-danger-subtle: #fee2e2;
+
   /* Motion */
   --transition-fast:   0.12s ease;
   --transition-medium: 0.22s ease;
@@ -43,6 +47,9 @@
 
     --color-accent:        #818cf8;
     --color-accent-subtle: #1e1b4b;
+
+    --color-danger:        #f87171;
+    --color-danger-subtle: #3f0f0f;
   }
 }
 
@@ -180,7 +187,7 @@ body {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: 12.5px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -194,7 +201,7 @@ body {
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text-primary);
-  font-size: 12.5px;
+  font-size: 14px;
   font-family: inherit;
   outline: none;
   box-shadow: 0 0 0 2px var(--color-accent-subtle);
@@ -212,11 +219,11 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-danger);
   cursor: pointer;
   border-radius: 3px;
   opacity: 0;
@@ -224,21 +231,26 @@ body {
   transition:
     opacity var(--transition-fast),
     background var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.tab-item:hover .tab-delete-btn,
-.tab-item.is-active .tab-delete-btn {
+.tab-item:hover .tab-delete-btn {
   opacity: 1;
 }
 
 .tab-delete-btn:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text-primary);
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px var(--color-danger-subtle);
 }
 
 .tab-delete-btn:active {
-  background: var(--color-border);
+  transform: scale(0.95);
+  box-shadow: none;
+  background: var(--color-danger-subtle);
 }
 
 /* Hide delete when only 1 tab */
