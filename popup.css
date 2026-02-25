@@ -170,19 +170,8 @@ body {
   color: var(--color-text-primary);
   border-color: var(--color-border);
   border-bottom-color: var(--color-surface); /* merge with editor */
+  box-shadow: inset 0 2px 0 var(--color-accent);
   font-weight: 500;
-}
-
-/* Active bottom accent */
-.tab-item.is-active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--color-accent);
-  border-radius: 2px 2px 0 0;
 }
 
 .tab-item.is-dragging {
