@@ -477,6 +477,7 @@
         item.className = 'tab-item' + (tab.id === STATE.activeTabId ? ' is-active' : '');
         item.setAttribute('role', 'tab');
         item.setAttribute('aria-selected', tab.id === STATE.activeTabId ? 'true' : 'false');
+        item.setAttribute('tabindex', '0');
         item.dataset.tabId = tab.id;
 
         // Label
@@ -490,6 +491,7 @@
         delBtn.className = 'tab-delete-btn';
         delBtn.title = 'Close tab';
         delBtn.setAttribute('aria-label', `Close tab ${tab.name}`);
+        delBtn.setAttribute('tabindex', '-1');
         if (STATE.tabs.length <= 1) {
           delBtn.disabled = true;
         }
@@ -512,6 +514,20 @@
         label.addEventListener('dblclick', (e) => {
           e.stopPropagation();
           TABS.startRename(tab.id, item, label);
+        });
+
+        // Keyboard: Enter → rename, ArrowLeft/Right → move focus between tabs
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            TABS.startRename(tab.id, item, label);
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const items = Array.from(TABS.listEl.querySelectorAll('.tab-item'));
+            const idx = items.indexOf(item);
+            const next = e.key === 'ArrowRight' ? items[idx + 1] : items[idx - 1];
+            if (next) next.focus();
+          }
         });
 
         // Delete button click
