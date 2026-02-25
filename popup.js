@@ -298,8 +298,29 @@
       { id: 'h1',               label: 'H1', title: 'Heading 1',        type: 'block', block: 'h1' },
       { id: 'h2',               label: 'H2', title: 'Heading 2',        type: 'block', block: 'h2' },
       { id: '__sep2__',         label: '',   title: '',                 type: 'sep'   },
-      { id: 'insertOrderedList',   label: '1.', title: 'Ordered list',  type: 'state' },
-      { id: 'insertUnorderedList', label: '•',  title: 'Bullet list',   type: 'state' },
+      { id: 'insertOrderedList',   label: '', title: 'Ordered list',    type: 'state',
+        icon:
+          '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
+          '<text x="0.5" y="4.5" fill="currentColor" font-size="4.5" font-family="sans-serif" font-weight="700">1</text>' +
+          '<text x="0.5" y="8.5" fill="currentColor" font-size="4.5" font-family="sans-serif" font-weight="700">2</text>' +
+          '<text x="0.5" y="12.5" fill="currentColor" font-size="4.5" font-family="sans-serif" font-weight="700">3</text>' +
+          '<path d="M5.5 2.5h9M5.5 6.5h9M5.5 10.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+          '</svg>' },
+      { id: 'insertUnorderedList', label: '', title: 'Bullet list',     type: 'state',
+        icon:
+          '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
+          '<circle cx="1.5" cy="2.5" r="1.5" fill="currentColor"/>' +
+          '<circle cx="1.5" cy="6.5" r="1.5" fill="currentColor"/>' +
+          '<circle cx="1.5" cy="10.5" r="1.5" fill="currentColor"/>' +
+          '<path d="M5.5 2.5h9M5.5 6.5h9M5.5 10.5h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+          '</svg>' },
+      { id: 'insertHorizontalRule', label: '', title: 'Horizontal rule', type: 'state',
+        icon:
+          '<svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">' +
+          '<path d="M0 2h15" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>' +
+          '<path d="M0 5.5h15" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' +
+          '<path d="M0 9h15" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.45"/>' +
+          '</svg>' },
       { id: '__sep3__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
     ],
@@ -319,7 +340,11 @@
 
         const btn = document.createElement('button');
         btn.className = 'toolbar-btn';
-        btn.textContent = cmd.label;
+        if (cmd.icon) {
+          btn.innerHTML = cmd.icon;
+        } else {
+          btn.textContent = cmd.label;
+        }
         btn.title = cmd.title;
         btn.setAttribute('aria-label', cmd.title);
         btn.setAttribute('aria-pressed', 'false');
