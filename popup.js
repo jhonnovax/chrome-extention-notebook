@@ -289,6 +289,11 @@
       editorEl.addEventListener('scroll', () => {
         if (IMAGES.currentImg) IMAGES._reposition();
       });
+
+      // Keep overlay bounds synced with popup viewport changes.
+      window.addEventListener('resize', () => {
+        if (IMAGES.currentImg) IMAGES._reposition();
+      });
     },
 
     _buildOverlay(editorEl) {
@@ -344,13 +349,30 @@
 
     _reposition() {
       const img = IMAGES.currentImg;
-      if (!img || !IMAGES.overlay) return;
+      if (!img || !IMAGES.overlay || !IMAGES._editorEl) return;
       const r = img.getBoundingClientRect();
+      const er = IMAGES._editorEl.getBoundingClientRect();
       const ov = IMAGES.overlay;
-      ov.style.left   = r.left   + 'px';
-      ov.style.top    = r.top    + 'px';
-      ov.style.width  = r.width  + 'px';
-      ov.style.height = r.height + 'px';
+
+      // Keep the overlay constrained to the editor viewport so it never
+      // overlaps toolbar/tab UI when the image is partially off-screen.
+      const left   = Math.max(r.left, er.left);
+      const top    = Math.max(r.top, er.top);
+      const right  = Math.min(r.right, er.right);
+      const bottom = Math.min(r.bottom, er.bottom);
+      const width  = right - left;
+      const height = bottom - top;
+
+      if (width <= 0 || height <= 0) {
+        ov.style.display = 'none';
+        return;
+      }
+
+      ov.style.display = 'block';
+      ov.style.left   = left + 'px';
+      ov.style.top    = top + 'px';
+      ov.style.width  = width + 'px';
+      ov.style.height = height + 'px';
       IMAGES.badge.textContent = Math.round(r.width) + ' × ' + Math.round(r.height);
     },
 
