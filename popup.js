@@ -83,6 +83,8 @@
     EDIT_ICON_HIT_WIDTH_PX: 22,
     EDIT_ICON_HIT_HEIGHT_PX: 18,
     EDIT_ICON_TOP_OFFSET_PX: 20,
+    PORTAL_TOKEN_RE: /\bPORTAL-[A-Za-z0-9]+\b/g,
+    URL_OR_PORTAL_RE: /(https?:\/\/\S+|\bPORTAL-[A-Za-z0-9]+\b)/g,
 
     init(editorEl) {
       // Open links in a new tab on click
@@ -158,6 +160,8 @@
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.textContent = url;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
       const afterNode = document.createTextNode(after);
       if (before) {
         node.textContent = before;
@@ -177,26 +181,85 @@
       return true;
     },
 
+    buildPortalUrl(token) {
+      return `https://on24-inc.atlassian.net/browse/${token}`;
+    },
+
+    _linkifyLine(line) {
+      let result = '';
+      let last = 0;
+      let match;
+      LINKS.URL_OR_PORTAL_RE.lastIndex = 0;
+
+      while ((match = LINKS.URL_OR_PORTAL_RE.exec(line)) !== null) {
+        const rawToken = match[1];
+        result += escapeHTML(line.slice(last, match.index));
+
+        if (/^https?:\/\//i.test(rawToken)) {
+          const url = rawToken.replace(/[.,;:!?)\]'"]+$/, '');
+          const trimmed = rawToken.length - url.length;
+          result += `<a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(url)}</a>`;
+          if (trimmed > 0) result += escapeHTML(rawToken.slice(-trimmed));
+        } else {
+          const portalUrl = LINKS.buildPortalUrl(rawToken);
+          result += `<a href="${escapeHTML(portalUrl)}" target="_blank" rel="noopener noreferrer">${escapeHTML(rawToken)}</a>`;
+        }
+
+        last = match.index + rawToken.length;
+      }
+
+      result += escapeHTML(line.slice(last));
+      return result;
+    },
+
     /** Convert plain text (possibly multi-line) with URLs into linkified HTML. */
     linkifyPlainText(text) {
       const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-      return lines.map((line) => {
-        const re = /(https?:\/\/\S+)/g;
-        let result = '';
+      return lines.map((line) => LINKS._linkifyLine(line)).join('<br>');
+    },
+
+    /** Linkify PORTAL tokens in HTML text nodes, skipping existing anchors. */
+    linkifyPortalTokensInHTML(html) {
+      const tpl = document.createElement('template');
+      tpl.innerHTML = html;
+
+      const walker = document.createTreeWalker(tpl.content, NodeFilter.SHOW_TEXT);
+      const textNodes = [];
+      let node = walker.nextNode();
+      while (node) {
+        textNodes.push(node);
+        node = walker.nextNode();
+      }
+
+      textNodes.forEach((textNode) => {
+        const parentEl = textNode.parentElement;
+        if (!parentEl || parentEl.closest('a')) return;
+        const text = textNode.textContent || '';
+        LINKS.PORTAL_TOKEN_RE.lastIndex = 0;
+        if (!LINKS.PORTAL_TOKEN_RE.test(text)) return;
+
+        LINKS.PORTAL_TOKEN_RE.lastIndex = 0;
+        const frag = document.createDocumentFragment();
         let last = 0;
-        let match;
-        while ((match = re.exec(line)) !== null) {
-          const rawUrl = match[1];
-          const url = rawUrl.replace(/[.,;:!?)\]'"]+$/, '');
-          const trimmed = rawUrl.length - url.length;
-          result += escapeHTML(line.slice(last, match.index));
-          result += `<a href="${escapeHTML(url)}">${escapeHTML(url)}</a>`;
-          if (trimmed > 0) result += escapeHTML(rawUrl.slice(-trimmed));
-          last = match.index + rawUrl.length;
+        let m;
+        while ((m = LINKS.PORTAL_TOKEN_RE.exec(text)) !== null) {
+          const token = m[0];
+          const idx = m.index;
+          if (idx > last) frag.appendChild(document.createTextNode(text.slice(last, idx)));
+          const a = document.createElement('a');
+          a.href = LINKS.buildPortalUrl(token);
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = token;
+          frag.appendChild(a);
+          last = idx + token.length;
         }
-        result += escapeHTML(line.slice(last));
-        return result;
-      }).join('<br>');
+        if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+
+        textNode.parentNode.replaceChild(frag, textNode);
+      });
+
+      return tpl.innerHTML;
     },
   };
 
@@ -712,12 +775,13 @@
         if (htmlData) {
           e.preventDefault();
           const sanitized = EDITOR.sanitizePastedHTML(htmlData);
-          document.execCommand('insertHTML', false, sanitized);
+          const linkified = LINKS.linkifyPortalTokensInHTML(sanitized);
+          document.execCommand('insertHTML', false, linkified);
           STORAGE.scheduleSave();
           return;
         }
 
-        if (text && /https?:\/\//i.test(text)) {
+        if (text && (/(https?:\/\/|PORTAL-[A-Za-z0-9]+)/i.test(text))) {
           e.preventDefault();
           const html = LINKS.linkifyPlainText(text);
           document.execCommand('insertHTML', false, html);
