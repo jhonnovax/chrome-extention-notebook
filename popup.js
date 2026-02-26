@@ -762,12 +762,6 @@
     _didBindGlobalClose: false,
 
     COMMANDS: [
-      { id: 'bold',             label: 'B',  title: 'Bold (Ctrl+B)',    type: 'state' },
-      { id: 'italic',           label: 'I',  title: 'Italic (Ctrl+I)',  type: 'state' },
-      { id: 'underline',        label: 'U',  title: 'Underline (Ctrl+U)', type: 'state' },
-      { id: 'strikeThrough',    label: 'S',  title: 'Strikethrough',    type: 'state' },
-      { id: 'h1',               label: 'H1', title: 'Heading 1',        type: 'block', block: 'h1' },
-      { id: 'h2',               label: 'H2', title: 'Heading 2',        type: 'block', block: 'h2' },
       { id: 'undo', label: '', title: 'Undo (Ctrl/Cmd+Z)', type: 'state',
         icon:
           '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
@@ -781,6 +775,23 @@
           '<path d="M12.6 6.1H6.4C4.2 6.1 2.5 7.8 2.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
           '</svg>' },
       { id: '__sep1__',         label: '',   title: '',                 type: 'sep'   },
+      { id: 'bold',             label: 'B',  title: 'Bold (Ctrl+B)',    type: 'state' },
+      { id: 'italic',           label: 'I',  title: 'Italic (Ctrl+I)',  type: 'state' },
+      { id: 'underline',        label: 'U',  title: 'Underline (Ctrl+U)', type: 'state' },
+      { id: 'strikeThrough',    label: 'S',  title: 'Strikethrough',    type: 'state' },
+      { id: 'highlightMenu',    label: '',   title: 'Highlight options', type: 'highlight-menu',
+        options: [
+          { id: 'hlClear',  title: 'Remove color', type: 'highlight-clear' },
+          { id: 'hlYellow', title: 'Highlight yellow', type: 'highlight', key: 'yellow', colorVar: '--highlight-yellow' },
+          { id: 'hlGreen',  title: 'Highlight green',  type: 'highlight', key: 'green', colorVar: '--highlight-green' },
+          { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', key: 'red', colorVar: '--highlight-red' },
+        ],
+      },
+      { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
+      { id: 'stripSelectionHtml', label: '', title: 'Remove format',    type: 'plain-text',
+        icon: '<span aria-hidden="true">T<span style="color:var(--color-danger);font-size:9px;">X</span></span>' },
+      { id: 'h1',               label: 'H1', title: 'Heading 1',        type: 'block', block: 'h1' },
+      { id: 'h2',               label: 'H2', title: 'Heading 2',        type: 'block', block: 'h2' },
       { id: 'insertOrderedList',   label: '', title: 'Ordered list',    type: 'state',
         icon:
           '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
@@ -814,21 +825,6 @@
           '<svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">' +
           '<path d="M1 5.5H14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
           '</svg>' },
-      { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
-      {
-        id: 'highlightMenu',
-        label: '',
-        title: 'Highlight options',
-        type: 'highlight-menu',
-        options: [
-          { id: 'hlClear',  title: 'Remove color', type: 'highlight-clear' },
-          { id: 'hlYellow', title: 'Highlight yellow', type: 'highlight', key: 'yellow', colorVar: '--highlight-yellow' },
-          { id: 'hlGreen',  title: 'Highlight green',  type: 'highlight', key: 'green', colorVar: '--highlight-green' },
-          { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', key: 'red', colorVar: '--highlight-red' },
-        ],
-      },
-      { id: 'stripSelectionHtml', label: '', title: 'Remove format', type: 'plain-text',
-        icon: '<span aria-hidden="true">T<span style="color:var(--color-danger);font-size:9px;">X</span></span>' },
       { id: '__sep2__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'clearContent',     label: '',   title: 'Clear all content', type: 'action',
         btnClass: 'toolbar-btn--danger',
