@@ -36,17 +36,17 @@
    ============================================================ */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg:            #0f0f11;
-    --color-surface:       #1a1a1f;
-    --color-surface-hover: #242430;
-    --color-border:        #2e2e3a;
+    --color-bg:            #0f141a;
+    --color-surface:       #151c24;
+    --color-surface-hover: #1d2732;
+    --color-border:        #2d3a46;
 
-    --color-text-primary:   #f4f4f5;
-    --color-text-secondary: #a1a1aa;
-    --color-text-muted:     #52525b;
+    --color-text-primary:   #e8edf2;
+    --color-text-secondary: #c5ced8;
+    --color-text-muted:     #92a0af;
 
-    --color-accent:        #818cf8;
-    --color-accent-subtle: #1e1b4b;
+    --color-accent:        #7cc4ff;
+    --color-accent-subtle: #10314d;
 
     --color-danger:        #f87171;
     --color-danger-subtle: #3f0f0f;
@@ -577,7 +577,7 @@ body {
 .editor a:hover::after {
   opacity: 1;
   transform: translateX(-50%) scale(1);
-  color: color-mix(in srgb, var(--color-accent) 82%, #101010);
+  color: color-mix(in srgb, var(--color-accent) 82%, var(--color-text-primary));
 }
 
 
