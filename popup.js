@@ -845,6 +845,7 @@
     _highlightTriggerEl: null,
     _highlightMenuOpen: false,
     _didBindGlobalClose: false,
+    _unorderedListRestore: null,
 
     COMMANDS: [
       { id: 'undo', label: '', title: 'Undo (Ctrl/Cmd+Z)', type: 'state',
@@ -1062,7 +1063,9 @@
       if (!EDITOR.el) return;
       EDITOR.el.focus();
 
-      if (cmd.type === 'state') {
+      if (cmd.id === 'insertUnorderedList') {
+        TOOLBAR.handleUnorderedListToggle();
+      } else if (cmd.type === 'state') {
         document.execCommand(cmd.id, false, null);
       } else if (cmd.type === 'block') {
         // Toggle: if already the requested block, revert to paragraph
@@ -1107,6 +1110,136 @@
       }
 
       STORAGE.scheduleSave();
+    },
+
+    handleUnorderedListToggle() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        document.execCommand('insertUnorderedList', false, null);
+        TOOLBAR._unorderedListRestore = null;
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      if (!EDITOR.el.contains(range.commonAncestorContainer)) {
+        document.execCommand('insertUnorderedList', false, null);
+        TOOLBAR._unorderedListRestore = null;
+        return;
+      }
+
+      const currentList = TOOLBAR.getCurrentListFromSelection();
+      if (
+        currentList &&
+        TOOLBAR._unorderedListRestore &&
+        TOOLBAR._unorderedListRestore.listEl === currentList
+      ) {
+        const restored = TOOLBAR.restoreUnorderedListSnapshot(currentList, TOOLBAR._unorderedListRestore.html);
+        if (restored && restored.first && restored.last) {
+          TOOLBAR.selectBetweenNodes(restored.first, restored.last);
+        }
+        TOOLBAR._unorderedListRestore = null;
+        return;
+      }
+
+      if (currentList) {
+        document.execCommand('insertUnorderedList', false, null);
+        TOOLBAR._unorderedListRestore = null;
+        return;
+      }
+
+      if (sel.isCollapsed) {
+        document.execCommand('insertUnorderedList', false, null);
+        TOOLBAR._unorderedListRestore = null;
+        return;
+      }
+
+      const beforeHtml = TOOLBAR.getRangeHTML(range);
+      document.execCommand('insertUnorderedList', false, null);
+      const insertedList = TOOLBAR.getCurrentListFromSelection();
+      if (!insertedList) {
+        TOOLBAR._unorderedListRestore = null;
+        return;
+      }
+
+      TOOLBAR.stripLeadingDashPrefixFromList(insertedList);
+      TOOLBAR.selectNodeContents(insertedList);
+      TOOLBAR._unorderedListRestore = {
+        listEl: insertedList,
+        html: beforeHtml,
+      };
+    },
+
+    getCurrentListFromSelection() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      let node = sel.anchorNode;
+      if (!node) return null;
+      if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+      if (!node || !node.closest) return null;
+      const list = node.closest('ul');
+      if (!list || !EDITOR.el || !EDITOR.el.contains(list)) return null;
+      return list;
+    },
+
+    getRangeHTML(range) {
+      if (!range) return '';
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(range.cloneContents());
+      return wrapper.innerHTML;
+    },
+
+    restoreUnorderedListSnapshot(listEl, html) {
+      if (!listEl || !listEl.parentNode) return null;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html || '';
+      const frag = document.createDocumentFragment();
+      while (wrapper.firstChild) frag.appendChild(wrapper.firstChild);
+      const first = frag.firstChild;
+      const last = frag.lastChild;
+      listEl.parentNode.replaceChild(frag, listEl);
+      return { first, last };
+    },
+
+    stripLeadingDashPrefixFromList(listEl) {
+      if (!listEl) return;
+      const items = listEl.querySelectorAll('li');
+      items.forEach((li) => TOOLBAR.stripLeadingDashPrefixFromListItem(li));
+    },
+
+    stripLeadingDashPrefixFromListItem(listItemEl) {
+      if (!listItemEl) return;
+      const walker = document.createTreeWalker(listItemEl, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        const value = node.nodeValue || '';
+        if (!value.trim()) {
+          node = walker.nextNode();
+          continue;
+        }
+        node.nodeValue = value.replace(/^(\s*)-\s+/, '$1');
+        break;
+      }
+    },
+
+    selectNodeContents(node) {
+      if (!node) return;
+      const sel = window.getSelection();
+      if (!sel) return;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    },
+
+    selectBetweenNodes(first, last) {
+      if (!first || !last) return;
+      const sel = window.getSelection();
+      if (!sel) return;
+      const range = document.createRange();
+      range.setStartBefore(first);
+      range.setEndAfter(last);
+      sel.removeAllRanges();
+      sel.addRange(range);
     },
 
     getThemeHighlightColor(colorVar) {
