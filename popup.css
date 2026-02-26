@@ -276,7 +276,7 @@ body {
 }
 
 .tab-delete-btn:active {
-  box-shadow: none;
+  box-shadow: 0 0 0 2px var(--color-border);
   background: var(--color-icon-hover-bg);
 }
 
