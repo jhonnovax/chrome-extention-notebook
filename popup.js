@@ -846,6 +846,7 @@
     _highlightMenuOpen: false,
     _didBindGlobalClose: false,
     _unorderedListRestore: null,
+    _orderedListRestore: null,
 
     COMMANDS: [
       { id: 'undo', label: '', title: 'Undo (Ctrl/Cmd+Z)', type: 'state',
@@ -1065,6 +1066,8 @@
 
       if (cmd.id === 'insertUnorderedList') {
         TOOLBAR.handleUnorderedListToggle();
+      } else if (cmd.id === 'insertOrderedList') {
+        TOOLBAR.handleOrderedListToggle();
       } else if (cmd.type === 'state') {
         document.execCommand(cmd.id, false, null);
       } else if (cmd.type === 'block') {
@@ -1169,14 +1172,71 @@
       };
     },
 
-    getCurrentListFromSelection() {
+    handleOrderedListToggle() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        document.execCommand('insertOrderedList', false, null);
+        TOOLBAR._orderedListRestore = null;
+        return;
+      }
+
+      const range = sel.getRangeAt(0);
+      if (!EDITOR.el.contains(range.commonAncestorContainer)) {
+        document.execCommand('insertOrderedList', false, null);
+        TOOLBAR._orderedListRestore = null;
+        return;
+      }
+
+      const currentList = TOOLBAR.getCurrentListFromSelection('ol');
+      if (
+        currentList &&
+        TOOLBAR._orderedListRestore &&
+        TOOLBAR._orderedListRestore.listEl === currentList
+      ) {
+        const restored = TOOLBAR.restoreUnorderedListSnapshot(currentList, TOOLBAR._orderedListRestore.html);
+        if (restored && restored.first && restored.last) {
+          TOOLBAR.selectBetweenNodes(restored.first, restored.last);
+        }
+        TOOLBAR._orderedListRestore = null;
+        return;
+      }
+
+      if (currentList) {
+        document.execCommand('insertOrderedList', false, null);
+        TOOLBAR._orderedListRestore = null;
+        return;
+      }
+
+      if (sel.isCollapsed) {
+        document.execCommand('insertOrderedList', false, null);
+        TOOLBAR._orderedListRestore = null;
+        return;
+      }
+
+      const beforeHtml = TOOLBAR.getRangeHTML(range);
+      document.execCommand('insertOrderedList', false, null);
+      const insertedList = TOOLBAR.getCurrentListFromSelection('ol');
+      if (!insertedList) {
+        TOOLBAR._orderedListRestore = null;
+        return;
+      }
+
+      TOOLBAR.stripLeadingOrderedPrefixFromList(insertedList);
+      TOOLBAR.selectNodeContents(insertedList);
+      TOOLBAR._orderedListRestore = {
+        listEl: insertedList,
+        html: beforeHtml,
+      };
+    },
+
+    getCurrentListFromSelection(tagName = 'ul') {
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return null;
       let node = sel.anchorNode;
       if (!node) return null;
       if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
       if (!node || !node.closest) return null;
-      const list = node.closest('ul');
+      const list = node.closest(tagName);
       if (!list || !EDITOR.el || !EDITOR.el.contains(list)) return null;
       return list;
     },
@@ -1217,6 +1277,27 @@
           continue;
         }
         node.nodeValue = value.replace(/^(\s*)-\s+/, '$1');
+        break;
+      }
+    },
+
+    stripLeadingOrderedPrefixFromList(listEl) {
+      if (!listEl) return;
+      const items = listEl.querySelectorAll('li');
+      items.forEach((li) => TOOLBAR.stripLeadingOrderedPrefixFromListItem(li));
+    },
+
+    stripLeadingOrderedPrefixFromListItem(listItemEl) {
+      if (!listItemEl) return;
+      const walker = document.createTreeWalker(listItemEl, NodeFilter.SHOW_TEXT);
+      let node = walker.nextNode();
+      while (node) {
+        const value = node.nodeValue || '';
+        if (!value.trim()) {
+          node = walker.nextNode();
+          continue;
+        }
+        node.nodeValue = value.replace(/^(\s*)\d+(?:\.\s*|\s+)/, '$1');
         break;
       }
     },
