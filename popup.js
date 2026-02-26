@@ -80,16 +80,54 @@
      LINKS — URL detection, auto-linkify, click-to-open
      ============================================================ */
   const LINKS = {
+    EDIT_ICON_HIT_WIDTH_PX: 22,
+    EDIT_ICON_HIT_HEIGHT_PX: 18,
+    EDIT_ICON_TOP_OFFSET_PX: 20,
+
     init(editorEl) {
       // Open links in a new tab on click
       editorEl.addEventListener('click', (e) => {
         const link = e.target.closest('a[href]');
         if (link) {
           e.preventDefault();
+
+          if (LINKS._isEditIconHit(e, link)) {
+            LINKS._editLink(link);
+            return;
+          }
+
           const href = link.href;
           if (/^https?:\/\//i.test(href)) chrome.tabs.create({ url: href });
         }
       });
+    },
+
+    _isEditIconHit(e, link) {
+      if (!(e instanceof MouseEvent)) return false;
+      const rect = link.getBoundingClientRect();
+      const centerX = rect.left + (rect.width / 2);
+      const withinX = Math.abs(e.clientX - centerX) <= (LINKS.EDIT_ICON_HIT_WIDTH_PX / 2);
+      const top = rect.top - LINKS.EDIT_ICON_TOP_OFFSET_PX;
+      const bottom = top + LINKS.EDIT_ICON_HIT_HEIGHT_PX;
+      const withinY = e.clientY >= top && e.clientY <= bottom;
+      return withinX && withinY;
+    },
+
+    _editLink(link) {
+      const currentHref = link.getAttribute('href') || '';
+      const nextHref = prompt('Edit URL:', currentHref || 'https://');
+      if (!nextHref || !nextHref.trim()) return;
+
+      const cleanedHref = nextHref.trim();
+      const oldVisibleText = link.textContent || '';
+
+      link.setAttribute('href', cleanedHref);
+      if (oldVisibleText === currentHref || oldVisibleText === link.href) {
+        link.textContent = cleanedHref;
+      }
+
+      STORAGE.scheduleSave();
+      EDITOR.focus();
     },
 
     /** Replace the URL immediately before the caret with an <a> tag. */

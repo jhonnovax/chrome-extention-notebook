@@ -547,9 +547,37 @@ body {
 }
 
 .editor a {
+  position: relative;
   color: var(--color-accent);
   text-decoration: underline;
   cursor: pointer;
+}
+
+.editor a::after {
+  content: "🔗";
+  position: absolute;
+  left: 50%;
+  top: -1.2em;
+  transform: translateX(-50%) scale(0.88);
+  font-size: 0.66em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-accent);
+  padding: 0.22em 0.3em;
+  opacity: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.editor a:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  color: color-mix(in srgb, var(--color-accent) 82%, #101010);
 }
 
 
