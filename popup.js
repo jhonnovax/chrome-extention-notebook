@@ -802,6 +802,7 @@
           '<svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">' +
           '<path d="M1 5.5H14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
           '</svg>' },
+      { id: 'stripSelectionHtml', label: 'Tx', title: 'Strip HTML tags from selected text', type: 'plain-text' },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
       {
         id: 'highlightMenu',
@@ -987,6 +988,29 @@
       } else if (cmd.type === 'action') {
         if (cmd.action) cmd.action();
         return; // scheduleSave handled inside action if needed
+      } else if (cmd.type === 'plain-text') {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
+        if (!EDITOR.el.contains(range.commonAncestorContainer)) return;
+
+        const fragment = range.cloneContents();
+        const container = document.createElement('div');
+        container.appendChild(fragment);
+        const plainText = (container.textContent || '').replace(/\r\n/g, '\n');
+
+        const p = document.createElement('p');
+        p.textContent = plainText;
+
+        range.deleteContents();
+        range.insertNode(p);
+
+        // Place caret at end of inserted paragraph.
+        const caret = document.createRange();
+        caret.selectNodeContents(p);
+        caret.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(caret);
       } else if (cmd.type === 'link') {
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed) {
