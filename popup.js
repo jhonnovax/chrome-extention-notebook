@@ -634,6 +634,13 @@
       tpl.innerHTML = html;
 
       tpl.content.querySelectorAll('*').forEach((node) => {
+        // Remove app-specific metadata attributes from pasted HTML (e.g. Teams).
+        Array.from(node.attributes || []).forEach((attr) => {
+          if (attr && attr.name && attr.name.toLowerCase().startsWith('data-')) {
+            node.removeAttribute(attr.name);
+          }
+        });
+
         const style = node.getAttribute('style');
         if (style != null) {
           const sanitizedStyle = EDITOR._stripFontStyleDecls(style);
@@ -648,6 +655,20 @@
           node.removeAttribute('color');
         }
       });
+
+      // Unwrap single top-level span wrappers often added by clipboard sources.
+      // They can carry no semantic value and may create inconsistent layout.
+      while (
+        tpl.content.childNodes.length === 1 &&
+        tpl.content.firstChild &&
+        tpl.content.firstChild.nodeType === Node.ELEMENT_NODE &&
+        tpl.content.firstChild.tagName === 'SPAN'
+      ) {
+        const wrapper = tpl.content.firstChild;
+        const frag = document.createDocumentFragment();
+        while (wrapper.firstChild) frag.appendChild(wrapper.firstChild);
+        tpl.content.replaceChildren(frag);
+      }
 
       return tpl.innerHTML;
     },
