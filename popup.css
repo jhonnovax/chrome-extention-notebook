@@ -12,6 +12,9 @@
   --color-text-primary:   #1f1f1f;
   --color-text-secondary: #52525b;
   --color-text-muted:     #a1a1aa;
+  --color-icon-muted:     #6b7280;
+  --color-icon-muted-hover:#4b5563;
+  --color-icon-hover-bg:  #e5e7eb;
 
   /* Accent */
   --color-accent:        #4f46e5;
@@ -49,6 +52,9 @@
     --color-text-primary:   #e8edf2;
     --color-text-secondary: #c5ced8;
     --color-text-muted:     #92a0af;
+    --color-icon-muted:      #9aa7b5;
+    --color-icon-muted-hover:#d2dae3;
+    --color-icon-hover-bg:   #2d3a46;
 
     --color-accent:        #7cc4ff;
     --color-accent-subtle: #10314d;
@@ -246,38 +252,32 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border: none;
   background: transparent;
-  color: var(--color-danger);
+  color: var(--color-icon-muted);
   cursor: pointer;
-  border-radius: 3px;
-  opacity: 0;
-  padding: 0;
+  border-radius: 999px;
+  opacity: 1;
+  padding: 2px;
+  margin-left: 2px;
   transition:
     opacity var(--transition-fast),
     background var(--transition-fast),
     color var(--transition-fast),
-    transform var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 
-.tab-item:hover .tab-delete-btn {
-  opacity: 1;
-}
-
 .tab-delete-btn:hover {
-  background: var(--color-danger-subtle);
-  color: var(--color-danger);
-  transform: scale(1.18);
-  box-shadow: 0 0 0 2px var(--color-danger-subtle);
+  background: var(--color-icon-hover-bg);
+  color: var(--color-icon-muted-hover);
+  box-shadow: 0 0 0 2px var(--color-border);
 }
 
 .tab-delete-btn:active {
-  transform: scale(0.95);
   box-shadow: none;
-  background: var(--color-danger-subtle);
+  background: var(--color-icon-hover-bg);
 }
 
 /* Hide delete when only 1 tab */
