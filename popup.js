@@ -19,6 +19,14 @@
     saveTimer: null,
   };
 
+  function deferNonCritical(task) {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(task, { timeout: 200 });
+      return;
+    }
+    setTimeout(task, 0);
+  }
+
   /* ============================================================
      STORAGE — chrome.storage.local wrappers
      ============================================================ */
@@ -648,9 +656,10 @@
       TOOLBAR.updateClearState();
     },
 
-    focus() {
+    focus(placeCaretAtEnd = true) {
       if (!EDITOR.el) return;
-      EDITOR.el.focus();
+      EDITOR.el.focus({ preventScroll: true });
+      if (!placeCaretAtEnd) return;
       // Place caret at end
       const range = document.createRange();
       const sel = window.getSelection();
@@ -963,7 +972,7 @@
       const el = TABS.listEl;
       if (!el) return;
 
-      el.innerHTML = '';
+      const frag = document.createDocumentFragment();
 
       STATE.tabs.forEach((tab) => {
         const item = document.createElement('div');
@@ -996,7 +1005,7 @@
 
         item.appendChild(label);
         item.appendChild(delBtn);
-        el.appendChild(item);
+        frag.appendChild(item);
 
         // Click on tab → switch
         item.addEventListener('click', (e) => {
@@ -1040,6 +1049,8 @@
         item.addEventListener('drop', (e) => TABS.onDrop(e, tab.id));
         item.addEventListener('dragend', () => TABS.clearDragState());
       });
+
+      el.replaceChildren(frag);
     },
 
     onDragStart(e, tabId, delBtn) {
@@ -1251,6 +1262,7 @@
     const tabAddBtn  = document.getElementById('tab-add-btn');
     const toolbarEl  = document.getElementById('toolbar');
     const editorEl   = document.getElementById('editor');
+    const storedPromise = STORAGE.load();
 
     // Mount editor
     EDITOR.mount(editorEl);
@@ -1261,12 +1273,6 @@
     // Wire up link click-to-open
     LINKS.init(editorEl);
 
-    // Wire up image paste + resize overlay
-    IMAGES.init(editorEl);
-
-    // Wire up list item drag-reorder handle
-    LIST_REORDER.init(editorEl);
-
     // Selection change → update toolbar active state
     document.addEventListener('selectionchange', () => {
       // Only update when editor has focus
@@ -1276,7 +1282,7 @@
     });
 
     // Load persisted data
-    let stored = await STORAGE.load();
+    let stored = await storedPromise;
 
     if (stored && stored.tabs && stored.tabs.length > 0) {
       STATE.tabs = stored.tabs;
@@ -1319,8 +1325,14 @@
       }
     });
 
-    // Focus editor on load
-    requestAnimationFrame(() => EDITOR.focus());
+    // Defer non-essential interaction modules until after initial UI paint.
+    deferNonCritical(() => {
+      IMAGES.init(editorEl);
+      LIST_REORDER.init(editorEl);
+    });
+
+    // Focus editor on load without traversing all editor content.
+    requestAnimationFrame(() => EDITOR.focus(false));
   }
 
   document.addEventListener('DOMContentLoaded', init);
