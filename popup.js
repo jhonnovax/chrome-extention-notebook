@@ -1001,6 +1001,7 @@
     _dropTabId: null,
     _dropPos: null,
     _didDrag: false,
+    _textMeasureCanvas: null,
 
     render(listEl) {
       TABS.listEl = listEl;
@@ -1062,9 +1063,17 @@
           TABS.startRename(tab.id, item, label);
         });
 
-        // Keyboard: Enter → rename, ArrowLeft/Right → move focus between tabs
+        // Keyboard: Space → activate, Enter → rename, ArrowLeft/Right → move focus between tabs
         item.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
+          // Let caret navigation work inside rename input without tab-level shortcuts.
+          if (item.classList.contains('tab-item--rename') || (e.target && e.target.classList && e.target.classList.contains('tab-rename-input'))) {
+            return;
+          }
+
+          if (e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            TABS.switchTo(tab.id);
+          } else if (e.key === 'Enter') {
             e.preventDefault();
             TABS.startRename(tab.id, item, label);
           } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -1168,7 +1177,59 @@
       });
     },
 
+    autosizeRenameInput(input, itemEl) {
+      if (!input || !itemEl) return;
+
+      if (!TABS._textMeasureCanvas) {
+        TABS._textMeasureCanvas = document.createElement('canvas');
+      }
+
+      const ctx = TABS._textMeasureCanvas.getContext('2d');
+      if (!ctx) return;
+
+      const styles = getComputedStyle(input);
+      const font = styles.font || [
+        styles.fontStyle,
+        styles.fontVariant,
+        styles.fontWeight,
+        styles.fontSize,
+        styles.lineHeight !== 'normal' ? '/' + styles.lineHeight : '',
+        styles.fontFamily,
+      ].join(' ').trim();
+      ctx.font = font;
+
+      const value = input.value || '';
+      const textWidth = Math.ceil(ctx.measureText(value || ' ').width);
+      const horizontalExtra =
+        parseFloat(styles.paddingLeft || '0') +
+        parseFloat(styles.paddingRight || '0') +
+        parseFloat(styles.borderLeftWidth || '0') +
+        parseFloat(styles.borderRightWidth || '0') +
+        2;
+
+      const minWidth = Math.max(24, Math.ceil(horizontalExtra));
+      const maxWidth = Math.max(minWidth, itemEl.clientWidth - 10);
+      const desired = Math.min(maxWidth, Math.max(minWidth, textWidth + horizontalExtra));
+      input.style.width = desired + 'px';
+    },
+
     startRename(tabId, itemEl, labelEl) {
+      if (tabId !== STATE.activeTabId) {
+        TABS.switchTo(tabId);
+
+        requestAnimationFrame(() => {
+          if (!TABS.listEl) return;
+          const nextItem = Array.from(TABS.listEl.querySelectorAll('.tab-item'))
+            .find((el) => el.dataset.tabId === tabId);
+          const nextLabel = nextItem && nextItem.querySelector('.tab-label');
+          if (nextItem && nextLabel) {
+            TABS.startRename(tabId, nextItem, nextLabel);
+          }
+        });
+
+        return;
+      }
+
       if (itemEl.classList.contains('tab-item--rename')) return; // already renaming
 
       itemEl.classList.add('tab-item--rename');
@@ -1181,6 +1242,7 @@
       input.value = tab ? tab.name : '';
 
       itemEl.insertBefore(input, labelEl);
+      TABS.autosizeRenameInput(input, itemEl);
       input.select();
 
       let committed = false;
@@ -1207,6 +1269,7 @@
       };
 
       input.addEventListener('blur', commit);
+      input.addEventListener('input', () => TABS.autosizeRenameInput(input, itemEl));
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
         if (e.key === 'Escape') { e.preventDefault(); input.removeEventListener('blur', commit); cancel(); }
