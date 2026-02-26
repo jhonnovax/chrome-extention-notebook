@@ -72,12 +72,12 @@
 }
 
 html {
-  width: 640px;
+  width: 800px;
   height: 600px;
 }
 
 body {
-  width: 640px;
+  width: 800px;
   height: 600px;
   overflow: hidden;
   background: var(--color-bg);
@@ -94,7 +94,7 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 640px;
+  width: 800px;
   height: 100%;
   display: flex;
   flex-direction: column;
