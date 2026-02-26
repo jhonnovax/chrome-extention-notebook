@@ -768,6 +768,18 @@
       { id: 'strikeThrough',    label: 'S',  title: 'Strikethrough',    type: 'state' },
       { id: 'h1',               label: 'H1', title: 'Heading 1',        type: 'block', block: 'h1' },
       { id: 'h2',               label: 'H2', title: 'Heading 2',        type: 'block', block: 'h2' },
+      { id: 'undo', label: '', title: 'Undo (Ctrl/Cmd+Z)', type: 'state',
+        icon:
+          '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
+          '<path d="M5.1 3.1L2.1 6.1L5.1 9.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M2.4 6.1H8.6C10.8 6.1 12.5 7.8 12.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+          '</svg>' },
+      { id: 'redo', label: '', title: 'Redo (Ctrl/Cmd+Shift+Z)', type: 'state',
+        icon:
+          '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
+          '<path d="M9.9 3.1L12.9 6.1L9.9 9.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<path d="M12.6 6.1H6.4C4.2 6.1 2.5 7.8 2.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' +
+          '</svg>' },
       { id: '__sep1__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'insertOrderedList',   label: '', title: 'Ordered list',    type: 'state',
         icon:
@@ -998,20 +1010,9 @@
         const fragment = range.cloneContents();
         const container = document.createElement('div');
         container.appendChild(fragment);
-        const plainText = (container.textContent || '').replace(/\r\n/g, '\n');
-
-        const p = document.createElement('p');
-        p.textContent = plainText;
-
-        range.deleteContents();
-        range.insertNode(p);
-
-        // Place caret at end of inserted paragraph.
-        const caret = document.createRange();
-        caret.selectNodeContents(p);
-        caret.collapse(false);
-        sel.removeAllRanges();
-        sel.addRange(caret);
+        const plainText = (container.textContent || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const html = escapeHTML(plainText).replace(/\n/g, '<br>');
+        document.execCommand('insertHTML', false, html);
       } else if (cmd.type === 'link') {
         const sel = window.getSelection();
         if (!sel || sel.isCollapsed) {
