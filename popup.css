@@ -21,6 +21,11 @@
   --color-danger:        #e53535;
   --color-danger-subtle: #fee2e2;
 
+  /* Highlight palette */
+  --highlight-yellow: #fde68a;
+  --highlight-green:  #bbf7d0;
+  --highlight-red:    #fecaca;
+
   /* Motion */
   --transition-fast:   0.12s ease;
   --transition-medium: 0.22s ease;
@@ -50,6 +55,10 @@
 
     --color-danger:        #f87171;
     --color-danger-subtle: #3f0f0f;
+
+    --highlight-yellow: #a16207;
+    --highlight-green:  #166534;
+    --highlight-red:    #991b1b;
   }
 }
 
@@ -405,10 +414,9 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 3px;
-  background: #fef08a;
-  color: #5b4a00;
-  font-size: 13px;
-  font-weight: 700;
+  background: var(--highlight-yellow);
+  color: var(--color-text-primary);
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -416,10 +424,10 @@ body {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  min-width: 140px;
+  min-width: 168px;
   display: none;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
   padding: 6px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -437,7 +445,7 @@ body {
   align-items: center;
   gap: 8px;
   width: 100%;
-  height: 28px;
+  height: 34px;
   padding: 0 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -456,8 +464,8 @@ body {
 
 .toolbar-dropdown-item__swatch {
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 100%;
+  height: 100%;
   border-radius: 3px;
   border: 1px solid rgba(0,0,0,0.12);
 }
@@ -465,6 +473,33 @@ body {
 .toolbar-dropdown-item__label {
   line-height: 1;
   white-space: nowrap;
+}
+
+.toolbar-dropdown-item__icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar-dropdown-colors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.toolbar-dropdown-item--remove {
+  justify-content: flex-start;
+  padding: 0 10px;
+  font-size: 14px;
+}
+
+.toolbar-dropdown-item--color {
+  width: 100%;
+  height: 26px;
+  padding: 0;
+  justify-content: center;
 }
 
 /* ============================================================

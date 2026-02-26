@@ -714,7 +714,27 @@
     setHTML(html) {
       if (!EDITOR.el) return;
       EDITOR.el.innerHTML = html || '';
+      EDITOR.normalizeHighlightColorsToTheme();
       TOOLBAR.updateClearState();
+    },
+
+    normalizeHighlightColorsToTheme() {
+      if (!EDITOR.el || !document.body) return;
+      const lookup = TOOLBAR.getKnownHighlightColorLookup();
+      if (!Object.keys(lookup).length) return;
+
+      const nodes = EDITOR.el.querySelectorAll('[style]');
+      nodes.forEach((node) => {
+        const bgColor = (node.style && node.style.backgroundColor) ? node.style.backgroundColor.trim() : '';
+        const bg = bgColor || ((node.style && node.style.background) ? node.style.background.trim() : '');
+        if (!bg) return;
+
+        const canonical = TOOLBAR._toCanonicalColor(bg);
+        const key = canonical ? lookup[canonical] : '';
+        if (!key) return;
+
+        node.style.backgroundColor = TOOLBAR.getThemeHighlightColorByKey(key);
+      });
     },
 
     focus(placeCaretAtEnd = true) {
@@ -789,10 +809,10 @@
         title: 'Highlight options',
         type: 'highlight-menu',
         options: [
-          { id: 'hlClear',  title: 'Clear highlight', type: 'highlight-clear' },
-          { id: 'hlYellow', title: 'Highlight yellow', type: 'highlight', color: '#fef08a' },
-          { id: 'hlGreen',  title: 'Highlight green',  type: 'highlight', color: '#dcfce7' },
-          { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', color: '#fee2e2' },
+          { id: 'hlClear',  title: 'Remove color', type: 'highlight-clear' },
+          { id: 'hlYellow', title: 'Highlight yellow', type: 'highlight', key: 'yellow', colorVar: '--highlight-yellow' },
+          { id: 'hlGreen',  title: 'Highlight green',  type: 'highlight', key: 'green', colorVar: '--highlight-green' },
+          { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', key: 'red', colorVar: '--highlight-red' },
         ],
       },
       { id: '__sep2__',         label: '',   title: '',                 type: 'sep'   },
@@ -848,6 +868,9 @@
           menu.setAttribute('role', 'menu');
           menu.setAttribute('aria-label', 'Highlight options');
 
+          const colorRow = document.createElement('div');
+          colorRow.className = 'toolbar-dropdown-colors';
+
           cmd.options.forEach((opt) => {
             const item = document.createElement('button');
             item.type = 'button';
@@ -857,12 +880,21 @@
             item.dataset.cmdId = opt.id;
 
             if (opt.type === 'highlight-clear') {
+              item.classList.add('toolbar-dropdown-item--remove');
               item.innerHTML =
-                '<span class="toolbar-dropdown-item__label">Clear highlight</span>';
+                '<span class="toolbar-dropdown-item__icon" aria-hidden="true">' +
+                  '<svg width="18" height="18" viewBox="0 0 18 18" fill="none">' +
+                    '<path d="M8.4 3.2a1.2 1.2 0 011.7 0l4.7 4.7a1.2 1.2 0 010 1.7l-2.7 2.7-6.4-6.4z" fill="#111111"/>' +
+                    '<path d="M2.6 9l2.7-2.7 6.4 6.4L9 15.4a1.2 1.2 0 01-1.7 0L2.6 10.7a1.2 1.2 0 010-1.7z" fill="#ffffff"/>' +
+                    '<path d="M5.3 6.3l6.4 6.4M8.4 3.2a1.2 1.2 0 011.7 0l4.7 4.7a1.2 1.2 0 010 1.7L9 15.4a1.2 1.2 0 01-1.7 0L2.6 10.7a1.2 1.2 0 010-1.7L8.4 3.2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>' +
+                  '</svg>' +
+                '</span>' +
+                '<span class="toolbar-dropdown-item__label">Remove color</span>';
             } else {
+              item.classList.add('toolbar-dropdown-item--color');
+              item.setAttribute('aria-label', opt.title);
               item.innerHTML =
-                '<span class="toolbar-dropdown-item__swatch" style="background:' + opt.color + ';"></span>' +
-                '<span class="toolbar-dropdown-item__label">' + opt.title.replace('Highlight ', '') + '</span>';
+                '<span class="toolbar-dropdown-item__swatch" style="background:var(' + opt.colorVar + ');"></span>';
             }
 
             item.addEventListener('mousedown', (e) => e.preventDefault());
@@ -870,9 +902,15 @@
               TOOLBAR.onButtonClick(opt);
               TOOLBAR.closeHighlightMenu();
             });
-            menu.appendChild(item);
+
+            if (opt.type === 'highlight-clear') {
+              menu.appendChild(item);
+            } else {
+              colorRow.appendChild(item);
+            }
           });
 
+          menu.appendChild(colorRow);
           wrap.appendChild(trigger);
           wrap.appendChild(menu);
           el.appendChild(wrap);
@@ -941,9 +979,11 @@
           document.execCommand('formatBlock', false, target);
         }
       } else if (cmd.type === 'highlight') {
-        document.execCommand('hiliteColor', false, cmd.color);
+        document.execCommand('hiliteColor', false, TOOLBAR.getThemeHighlightColor(cmd.colorVar));
+        EDITOR.normalizeHighlightColorsToTheme();
       } else if (cmd.type === 'highlight-clear') {
         document.execCommand('hiliteColor', false, 'transparent');
+        EDITOR.normalizeHighlightColorsToTheme();
       } else if (cmd.type === 'action') {
         if (cmd.action) cmd.action();
         return; // scheduleSave handled inside action if needed
@@ -960,6 +1000,48 @@
       }
 
       STORAGE.scheduleSave();
+    },
+
+    getThemeHighlightColor(colorVar) {
+      if (!colorVar) return '#fde68a';
+      const value = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim();
+      return value || '#fde68a';
+    },
+
+    getThemeHighlightColorByKey(key) {
+      if (key === 'yellow') return TOOLBAR.getThemeHighlightColor('--highlight-yellow');
+      if (key === 'green') return TOOLBAR.getThemeHighlightColor('--highlight-green');
+      if (key === 'red') return TOOLBAR.getThemeHighlightColor('--highlight-red');
+      return '#fde68a';
+    },
+
+    _toCanonicalColor(value) {
+      if (!value) return '';
+      const probe = document.createElement('span');
+      probe.style.color = '';
+      probe.style.color = value;
+      if (!probe.style.color) return '';
+      document.body.appendChild(probe);
+      const canonical = getComputedStyle(probe).color.replace(/\s+/g, '').toLowerCase();
+      probe.remove();
+      return canonical;
+    },
+
+    getKnownHighlightColorLookup() {
+      const entries = [
+        ['yellow', '#fde68a'],
+        ['yellow', '#a16207'],
+        ['green', '#bbf7d0'],
+        ['green', '#166534'],
+        ['red', '#fecaca'],
+        ['red', '#991b1b'],
+      ];
+      const map = {};
+      entries.forEach(([key, color]) => {
+        const canonical = TOOLBAR._toCanonicalColor(color);
+        if (canonical) map[canonical] = key;
+      });
+      return map;
     },
 
     updateActiveState() {
@@ -1404,6 +1486,17 @@
         TOOLBAR.updateActiveState();
       }
     });
+
+    const themeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = () => {
+      EDITOR.normalizeHighlightColorsToTheme();
+      STORAGE.scheduleSave();
+    };
+    if (themeMedia.addEventListener) {
+      themeMedia.addEventListener('change', handleThemeChange);
+    } else if (themeMedia.addListener) {
+      themeMedia.addListener(handleThemeChange);
+    }
 
     // Load persisted data
     let stored = await storedPromise;
