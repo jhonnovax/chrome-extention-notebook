@@ -802,7 +802,6 @@
           '<svg width="15" height="11" viewBox="0 0 15 11" fill="none" aria-hidden="true">' +
           '<path d="M1 5.5H14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
           '</svg>' },
-      { id: 'stripSelectionHtml', label: 'Tx', title: 'Strip HTML tags from selected text', type: 'plain-text' },
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
       {
         id: 'highlightMenu',
@@ -816,6 +815,8 @@
           { id: 'hlRed',    title: 'Highlight red',    type: 'highlight', key: 'red', colorVar: '--highlight-red' },
         ],
       },
+      { id: 'stripSelectionHtml', label: '', title: 'Remove format', type: 'plain-text',
+        icon: '<span aria-hidden="true">T<span style="color:var(--color-danger);font-size:9px;">X</span></span>' },
       { id: '__sep2__',         label: '',   title: '',                 type: 'sep'   },
       { id: 'clearContent',     label: '',   title: 'Clear all content', type: 'action',
         btnClass: 'toolbar-btn--danger',
