@@ -1290,9 +1290,14 @@
           } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             e.preventDefault();
             const items = Array.from(TABS.listEl.querySelectorAll('.tab-item'));
+            if (items.length === 0) return;
             const idx = items.indexOf(item);
-            const next = e.key === 'ArrowRight' ? items[idx + 1] : items[idx - 1];
-            if (next) next.focus();
+            const step = e.key === 'ArrowRight' ? 1 : -1;
+            const nextIdx = (idx + step + items.length) % items.length;
+            const nextItem = items[nextIdx];
+            const nextTabId = nextItem && nextItem.dataset ? nextItem.dataset.tabId : null;
+            if (!nextTabId) return;
+            TABS.switchTo(nextTabId, false, true);
           }
         });
 
@@ -1457,6 +1462,14 @@
       input.select();
 
       let committed = false;
+      const restoreTabFocus = () => {
+        requestAnimationFrame(() => {
+          if (!TABS.listEl) return;
+          const target = Array.from(TABS.listEl.querySelectorAll('.tab-item'))
+            .find((el) => el.dataset.tabId === tabId);
+          if (target) target.focus({ preventScroll: true });
+        });
+      };
 
       const commit = () => {
         if (committed) return;
@@ -1470,6 +1483,7 @@
         itemEl.classList.remove('tab-item--rename');
         if (input.parentNode) input.parentNode.removeChild(input);
         TABS.redraw();
+        restoreTabFocus();
       };
 
       const cancel = () => {
@@ -1477,6 +1491,7 @@
         committed = true;
         itemEl.classList.remove('tab-item--rename');
         if (input.parentNode) input.parentNode.removeChild(input);
+        itemEl.focus({ preventScroll: true });
       };
 
       input.addEventListener('blur', commit);
@@ -1487,7 +1502,7 @@
       });
     },
 
-    switchTo(tabId, skipSave = false) {
+    switchTo(tabId, skipSave = false, focusActiveTab = false) {
       if (tabId === STATE.activeTabId) return;
 
       // Save current tab content
@@ -1512,7 +1527,10 @@
 
         // Scroll active tab into view
         const activeEl = TABS.listEl && TABS.listEl.querySelector('.tab-item.is-active');
-        if (activeEl) activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        if (activeEl) {
+          activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          if (focusActiveTab) activeEl.focus({ preventScroll: true });
+        }
       });
     },
 

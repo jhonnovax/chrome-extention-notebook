@@ -193,6 +193,10 @@ body {
   outline-offset: -2px;
 }
 
+.tab-item.is-active:focus-visible {
+  outline: none;
+}
+
 .tab-item.is-active {
   background: var(--color-surface);
   color: var(--color-text-primary);
