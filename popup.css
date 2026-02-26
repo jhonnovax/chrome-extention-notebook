@@ -9,7 +9,7 @@
   --color-border:        #e2e2ea;
 
   /* Text */
-  --color-text-primary:   #18181b;
+  --color-text-primary:   #1f1f1f;
   --color-text-secondary: #52525b;
   --color-text-muted:     #a1a1aa;
 
@@ -476,7 +476,7 @@ body {
   padding: 16px 18px;
   overflow-y: auto;
   background: var(--color-surface);
-  color: #1f1f1f;
+  color: var(--color-text-primary);
   font-size: 11pt;
   line-height: 1.7;
   outline: none;
