@@ -476,7 +476,7 @@ body {
   padding: 16px 18px;
   overflow-y: auto;
   background: var(--color-surface);
-  color: var(--color-text-primary);
+  color: #1f1f1f;
   font-size: 11pt;
   line-height: 1.7;
   outline: none;

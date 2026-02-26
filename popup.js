@@ -563,7 +563,7 @@
         const idx = part.indexOf(':');
         if (idx === -1) return false;
         const prop = part.slice(0, idx).trim().toLowerCase();
-        return prop !== 'font-family' && prop !== 'font-size' && prop !== 'font';
+        return prop !== 'font-family' && prop !== 'font-size' && prop !== 'font' && prop !== 'color';
       });
 
       return kept.join('; ');
@@ -585,6 +585,7 @@
         if (node.tagName === 'FONT') {
           node.removeAttribute('face');
           node.removeAttribute('size');
+          node.removeAttribute('color');
         }
       });
 
