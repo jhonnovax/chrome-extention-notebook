@@ -117,9 +117,21 @@ body {
   flex-shrink: 0;
   height: 40px;
   background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  border-bottom: none;
   gap: 0;
   overflow: hidden;
+}
+
+.tab-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-border);
+  pointer-events: none;
 }
 
 .tab-list {
@@ -168,6 +180,7 @@ body {
     color var(--transition-fast),
     border-color var(--transition-fast);
   position: relative;
+  z-index: 1;
 }
 
 .tab-item:hover {
@@ -184,9 +197,20 @@ body {
   background: var(--color-surface);
   color: var(--color-text-primary);
   border-color: var(--color-border);
-  border-bottom-color: var(--color-surface); /* merge with editor */
+  border-bottom: none; /* active tab should visually merge with editor */
   box-shadow: inset 0 2px 0 var(--color-accent);
   font-weight: 500;
+  z-index: 2;
+}
+
+.tab-item.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-surface);
 }
 
 .tab-item.is-dragging {
