@@ -675,7 +675,7 @@
   const EDITOR = {
     el: null,
 
-    _stripFontStyleDecls(styleText) {
+    _stripFontStyleDecls(styleText, stripColor = false) {
       if (!styleText) return '';
       const parts = styleText
         .split(';')
@@ -686,7 +686,9 @@
         const idx = part.indexOf(':');
         if (idx === -1) return false;
         const prop = part.slice(0, idx).trim().toLowerCase();
-        return prop !== 'font-family' && prop !== 'font-size' && prop !== 'font';
+        if (prop === 'font-family' || prop === 'font-size' || prop === 'font') return false;
+        if (stripColor && prop === 'color') return false;
+        return true;
       });
 
       return kept.join('; ');
@@ -704,9 +706,10 @@
           }
         });
 
+        const isAnchorContext = node.tagName === 'A' || !!node.closest('a');
         const style = node.getAttribute('style');
         if (style != null) {
-          const sanitizedStyle = EDITOR._stripFontStyleDecls(style);
+          const sanitizedStyle = EDITOR._stripFontStyleDecls(style, isAnchorContext);
           if (sanitizedStyle) node.setAttribute('style', sanitizedStyle);
           else node.removeAttribute('style');
         }
