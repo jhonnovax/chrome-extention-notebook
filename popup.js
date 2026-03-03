@@ -686,7 +686,8 @@
         const idx = part.indexOf(':');
         if (idx === -1) return false;
         const prop = part.slice(0, idx).trim().toLowerCase();
-        if (prop === 'font-family' || prop === 'font-size' || prop === 'font') return false;
+        const genericPropsToStrip = ['background', 'background-color', 'font-family', 'font-size', 'font'];
+        if (genericPropsToStrip.includes(prop)) return false;
         if (stripColor && prop === 'color') return false;
         if (stripBorder && (
           prop === 'border' || prop.startsWith('border-') ||
