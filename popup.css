@@ -7,6 +7,7 @@
   --color-surface:       #ffffff;
   --color-surface-hover: #f0f0f5;
   --color-border:        #e2e2ea;
+  --color-separator:     #e2e2ea;
 
   /* Text */
   --color-text-primary:   #1f1f1f;
@@ -51,6 +52,7 @@
     --color-surface:       #151c24;
     --color-surface-hover: #1d2732;
     --color-border:        #2d3a46;
+    --color-separator:     #2d3a46;
 
     --color-text-primary:   #e8edf2;
     --color-text-secondary: #c5ced8;
@@ -658,7 +660,7 @@ body {
 
 .editor hr {
   border: none;
-  border-top: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-separator);
   margin: 0.9em 0;
 }
 
