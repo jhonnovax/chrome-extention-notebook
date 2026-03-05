@@ -99,7 +99,7 @@
           }
 
           const href = link.href;
-          if (/^https?:\/\//i.test(href)) chrome.tabs.create({ url: href });
+          if (/^https?:\/\//i.test(href)) chrome.tabs.create({ url: href, active: false });
         }
       });
     },
