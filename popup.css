@@ -213,7 +213,6 @@ body {
   color: var(--color-text-primary);
   border-color: var(--color-border);
   border-bottom: none; /* active tab should visually merge with editor */
-  box-shadow: inset 0 2px 0 var(--color-accent);
   font-weight: 500;
   z-index: 2;
 }
