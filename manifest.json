@@ -10,7 +10,6 @@
     "128": "icon128.png"
   },
   "action": {
-    "default_popup": "popup.html",
     "default_title": "Notebook",
     "default_icon": {
       "16":  "icon16.png",
@@ -19,5 +18,11 @@
       "128": "icon128.png"
     }
   },
-  "permissions": ["storage"]
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "sidePanel"]
 }

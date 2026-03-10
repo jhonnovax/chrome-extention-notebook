@@ -89,13 +89,13 @@ a {
 }
 
 html {
-  width: 800px;
-  height: 600px;
+  width: 100%;
+  height: 100%;
 }
 
 body {
-  width: 800px;
-  height: 600px;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: var(--color-bg);
   color: var(--color-text-primary);
@@ -111,7 +111,7 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 800px;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
