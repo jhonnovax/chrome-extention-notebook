@@ -886,8 +886,6 @@
       { id: 'createLink',       label: '🔗', title: 'Insert link',      type: 'link'  },
       { id: 'stripSelectionHtml', label: '', title: 'Remove format',    type: 'plain-text',
         icon: '<span aria-hidden="true">T<span style="color:var(--color-danger);font-size:9px;">X</span></span>' },
-      { id: 'h1',               label: 'H1', title: 'Heading 1',        type: 'block', block: 'h1' },
-      { id: 'h2',               label: 'H2', title: 'Heading 2',        type: 'block', block: 'h2' },
       { id: 'insertOrderedList',   label: '', title: 'Ordered list',    type: 'state',
         icon:
           '<svg width="15" height="13" viewBox="0 0 15 13" fill="none" aria-hidden="true">' +
